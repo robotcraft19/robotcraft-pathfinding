@@ -1,5 +1,8 @@
 #include <iostream>
+#include <queue> 
+
 #include "ros/ros.h"
+#include <ros/console.h>
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/LaserScan.h"
 
@@ -28,7 +31,7 @@ private:
     float old_prop_error;
     float integral_error;
     
-    float KP = 10.0;
+    float KP = 10;
     float KI = 0.0;
     float KD = 0.0;
     float time_interval = 0.1;
@@ -45,9 +48,9 @@ private:
 	if (front_distance < TARGET_DISTANCE) 
     {
         // Prevent robot from crashing
-        msg.angular.z = 1.5;
+        msg.angular.z = 1.25; // maximum angular speed
         msg.linear.x = -0.04;
-    } 
+    }
     else if (robot_lost == true)
     {
         // Robot is lost, go straight to find wall
@@ -79,8 +82,6 @@ private:
     float calculateGain(float value) 
 	{	
 	    float error = TARGET_DISTANCE - value;
-	    //if (error >= TARGET_DISTANCE / 2) error = TARGET_DISTANCE / 2.0;
-	    //if (error <= -TARGET_DISTANCE) error = -TARGET_DISTANCE / 10.0;
 	    float new_der_err = error - this->old_prop_error;
 	    float new_int_err = this->integral_error + error;
 
@@ -88,7 +89,9 @@ private:
 	                 + this->KD*new_der_err/this->time_interval;
 
 	    this->old_prop_error = error;
-	    this->integral_error = new_int_err;         
+	    this->integral_error = new_int_err;  
+	    //if(gain > 0.3) gain = 0.3;
+	    if(gain < -0.4) gain = -0.4;
 
 	    return gain;
 	}
