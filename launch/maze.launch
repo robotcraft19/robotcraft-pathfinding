@@ -1,0 +1,8 @@
+<!-- maze.launch: launch stage with a maze_solver node -->
+
+<launch>
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(find robotcraft_maze)/world/robotcraft_maze.world" />
+    
+    <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic" output="screen" />
+
+</launch>  
