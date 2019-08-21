@@ -1,5 +1,4 @@
 #include <iostream>
-#include <queue> 
 
 #include "ros/ros.h"
 #include <ros/console.h>
@@ -107,7 +106,11 @@ private:
 	    {
 	            ++lost_counter;
 
-	            if (lost_counter >= 75) robot_lost = true;
+                // 2π / 0.4 ≈ 160, after 160 loops robot has made at least one full rotation
+	            if (lost_counter >= 160) {
+                    robot_lost = true;
+                    ROS_WARNING("ROBOT LOST! SEARCHING WALL...");
+                }
 	    } 
 	    else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE) 
 	    {
