@@ -24,3 +24,6 @@ target_link_libraries(maze_basic ${catkin_LIBRARIES})
 
 #add_executable(maze_pro src/maze_PROsolver.cpp) # or .py?
 #target_link_libraries(maze_pro ${catkin_LIBRARIES})
+
+add_executable(map_saver src/map_saver.cpp)
+target_link_libraries(map_saver ${catkin_LIBRARIES})

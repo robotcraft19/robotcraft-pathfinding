@@ -1,8 +1,18 @@
 <!-- maze.launch: launch stage with a maze_solver node -->
 
 <launch>
+	<!-- Run stage node -->
     <node pkg="stage_ros" type="stageros" name="stageros" args="$(find robotcraft_maze)/world/robotcraft_maze.world" />
+
+    <!-- Run gmapping node -->
+	  <node pkg="gmapping" type="slam_gmapping" name="gmapping">
+  	   <remap from="scan" to="base_scan_0" />
+    </node>
     
+    <!-- Run maze_basic node -->
     <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic" output="screen" />
+
+    <!-- Run map saver node, periodically saves map -->
+  	<node pkg="robotcraft_maze" type="map_saver" name="map_saver_controller" output="screen"/>
 
 </launch>  
