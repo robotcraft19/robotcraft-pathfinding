@@ -11,6 +11,7 @@ class BasicSolver {
 
 private:
 
+    // Node handle
     ros::NodeHandle n;
 
     // Publishers
@@ -35,8 +36,10 @@ private:
     float KD = 0.0;
     float time_interval = 0.1;
 
+    // Helper variables
     bool robot_lost;
     int lost_counter;
+
 
 
     geometry_msgs::Twist calculateCommand(){
@@ -72,27 +75,35 @@ private:
     
 
     void frontIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
-    	this->front_distance = msg->ranges[0]; // Extract range, first (and only) element of array
+    	// Extract range, first (and only) element of array
+        this->front_distance = msg->ranges[0]; 
     }
     void leftIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
-    	this->left_distance = msg->ranges[0]; // Extract range, first (and only) element of array
+        // Extract range, first (and only) element of array
+    	this->left_distance = msg->ranges[0]; 
     }
     void rightIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
-    	this->right_distance = msg->ranges[0]; // Extract range, first (and only) element of array
+        // Extract range, first (and only) element of array
+    	this->right_distance = msg->ranges[0]; 
     }
+
 
     float calculateGain(float value) 
 	{	
+        // Calculate errors
 	    float error = TARGET_DISTANCE - value;
 	    float new_der_err = error - this->old_prop_error;
 	    float new_int_err = this->integral_error + error;
 
+        // Calculate gain
 	    float gain = this->KP*error + this->KI*new_int_err*this->time_interval
 	                 + this->KD*new_der_err/this->time_interval;
 
+        // Update old errors
 	    this->old_prop_error = error;
 	    this->integral_error = new_int_err;  
-	    //if(gain > 0.3) gain = 0.3;
+	    
+        // Restrict clockwise gain to prevent overshooting on sharp corners
 	    if(gain < -0.4) gain = -0.4;
 
 	    return gain;
@@ -104,18 +115,18 @@ private:
 	    if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE 
 	        && left_distance > TARGET_DISTANCE) 
 	    {
-	            ++lost_counter;
+            ++lost_counter;
 
-                // 2π / 0.4 ≈ 160, after 160 loops robot has made at least one full rotation
-	            if (lost_counter >= 160) {
-                    robot_lost = true;
-                    ROS_WARNING("ROBOT LOST! SEARCHING WALL...");
-                }
+            // 2π / 0.4 ≈ 16.0, after 160 loops robot has made at least one full rotation
+            if (lost_counter >= 160) {
+                robot_lost = true;
+                ROS_WARNING("ROBOT LOST! SEARCHING WALL...");
+            }
 	    } 
 	    else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE) 
 	    {
-	            robot_lost = false;
-	            lost_counter = 0;
+            robot_lost = false;
+            lost_counter = 0;
 	    }
 	}
 
@@ -127,7 +138,6 @@ public:
         this->n = ros::NodeHandle();
 
         // Setup publishers
-        // Create a publisher object, able to push messages
     	this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
 
         // Setup subscribers
