@@ -41,6 +41,9 @@ private:
 
 
     geometry_msgs::Twist calculateCommand(){
+    
+    // Check if robot is lost (after 75 loops without sensing any wall)
+    calculateRobotLost();
 
 	// Create message
 	auto msg = geometry_msgs::Twist();
