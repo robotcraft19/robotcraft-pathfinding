@@ -34,7 +34,8 @@ private:
     ros::Subscriber right_ir_sub;
 
     // External Parameters
-    std::string which_wall;
+    bool left;
+    bool right;
 
     // Global variables
     float front_distance;
@@ -63,7 +64,7 @@ private:
 
 	// Create message
 	auto msg = geometry_msgs::Twist();
-    if (which_wall == "right") 
+    if (right) 
     {
         if (front_distance < TARGET_DISTANCE)
         {
@@ -85,13 +86,13 @@ private:
         }
     }
 
-    else if ( which_wall == "left") 
+    else if (left) 
     {
         if (front_distance < TARGET_DISTANCE)
         {
             // Prevent robot from crashing
-            msg.angular.z = 1.25; // maximum angular speed
-            msg.linear.x = 0.04;
+            msg.angular.z = -1.25; // maximum angular speed
+            msg.linear.x = -0.04;
         }
         else if (robot_lost == true)
         {
@@ -101,7 +102,7 @@ private:
         else
         {
             // Robot keeps using normal PID controller
-            float gain = (-1)*calculateGain(left_distance);
+            float gain = calculateGain(left_distance);
             msg.linear.x = 0.08;
             msg.angular.z = gain;
         }
@@ -141,15 +142,23 @@ private:
 	    this->old_prop_error = error;
 	    this->integral_error = new_int_err;  
 	    
-        // Restrict clockwise gain to prevent overshooting on sharp corners
-	    if(gain < -0.4) gain = -0.4;
+        // Restrict gain to prevent overshooting on sharp corners
+        if(left)
+            gain = -gain;
+            if(gain > 0.4)
+                gain = 0.4;
+
+            
+	    if(right)
+            if(gain < -0.4) gain = -0.4;
+
 
 	    return gain;
 	}
 
 	void calculateRobotLost() 
 	{
-        if (which_wall == "right")
+        if (right)
         {
             // Calculations needed to check if robot is lost
             if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE 
@@ -157,8 +166,8 @@ private:
             {
                 ++lost_counter;
 
-                // 2π / 0.4 ≈ 16.0, after 160 loops robot has made at least one full rotation
-                if (lost_counter >= 160) {
+                // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
+                if (lost_counter >= 100) {
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
@@ -169,7 +178,7 @@ private:
                 lost_counter = 0;
             }
         }
-        else if (which_wall == "left")
+        else if (left)
         {
             // Calculations needed to check if robot is lost
             if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE 
@@ -177,8 +186,8 @@ private:
             {
                 ++lost_counter;
 
-                // 2π / 0.4 ≈ 16.0, after 160 loops robot has made at least one full rotation
-                if (lost_counter >= 160) {
+                // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
+                if (lost_counter >= 100) {
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
@@ -187,6 +196,7 @@ private:
             {
                 robot_lost = false;
                 lost_counter = 0;
+                // ROS_WARN("WALL FOUND");
             }
         }
 	}
@@ -198,10 +208,30 @@ public:
         // Initialize ROS
         this->n = ros::NodeHandle();
 
-        n.getParam("/maze_basic_node/which_wall", which_wall);
+        n.getParam("left", this->left);
+        n.getParam("right", this->right);
 
-        if ((which_wall != "left") && (which_wall != "right")) 
-            which_wall = "right";
+        ROS_INFO("Right = %d\n", this->right);
+        ROS_INFO("Left = %d\n", this->left);
+
+        if (left && right) 
+        {
+            if (rand() > 0.5) 
+                left = false;
+            else
+                right = false;
+        }
+
+        if (!left && !right) 
+        {
+            if (rand() > 0.5) 
+                left = true;
+            else
+                right = true;
+        }
+
+        ROS_INFO("Right = %d\n", right);
+        ROS_INFO("Left = %d\n", left);
 
         // Setup publishers
     	this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);

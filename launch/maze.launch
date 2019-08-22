@@ -11,7 +11,8 @@
 
   <!-- Run maze_basic node -->
   <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic_node" output="screen" />
-    <param name="which_wall" type="str" value="left" />
+  <param name="left" type="bool" value="true" />
+  <param name="right" type="bool" value="true" />
 
   <!-- Run map saver node, periodically saves map -->
   <node pkg="robotcraft_maze" type="map_saver" name="map_saver_controller_node" output="screen"/>
