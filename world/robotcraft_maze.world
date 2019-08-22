@@ -33,7 +33,7 @@ floorplan (
 
 # include the RC'2019 robot (change "X" with your group number):
   include "robotcraft2019_robot.inc"
-  robotcraft2019_robot(pose [ 0.05  4.95  0.000  0.000 ] name "robotcraft_robot_groupX")
+  robotcraft2019_robot(pose [ 0.05  4.95  0.000  0.000 ] name "robotcraft_robot_group3")
    
 # ---------------------------------------------------------------------------------
 # in case you want to check (and try) the 2017's and 2018's robot 

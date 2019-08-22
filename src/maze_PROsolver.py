@@ -1,72 +1,91 @@
 #!/usr/bin/env python
 import rospy
-import cv2
-import numpy as np
+import map_loader as ml
+from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion
+from geometry_msgs.msg import Twist
+from math import atan2
+
+path_raw = [(-1, 1), (-1, 2), (-1, 3), (-1, 4), (-1, 5), (0, 6), (1, 6), (2, 7), (3, 8), (4, 9), (4, 10), (4, 11), (4, 12), (4, 13), (4, 14), (4, 15), (4, 16), (4, 17), (4, 18), (4, 19), (3, 20), (2, 20), (1, 20), (0, 21), (0, 22), (0, 23), (1, 24), (2, 24), (3, 24), (4, 24), (5, 24), (6, 24), (7, 24), (8, 23), (8, 22), (8, 21), (9, 20), (10, 20), (11, 20), (12, 19), (13, 18), (13, 17), (13, 16), (14, 15), (15, 15), (16, 14), (16, 13), (16, 12), (15, 11), (14, 10), (13, 9), (13, 8), (13, 7), (12, 6), (12, 5), (12, 4), (13, 3), (14, 2), (15, 2), (16, 2), (17, 2), (18, 2), (19, 2), (20, 2), (21, 3), (21, 4), (22, 5), (23, 5)]
+
+class Pose:
+    def __init__(self, x, y, theta):
+        self.x = x
+        self.y = y
+        self.theta = theta
+
+class Cell:
+    def __init__(self, row, column):
+        self.row = row
+        self.column = column
+
+    def pose(self):
+        return Pose(self.column * 0.2, -self.row * 0.2, 0)
 
 class ProSolver:
     def __init__(self):
         rospy.init_node('maze_pro_solver', anonymous=True)
 
-        self.map_matrix = self.loadMap()
+        self.map_matrix = ml.loadMap()
+        self.pose = Pose(0, 0, 0) # set initial pose
+        self.path = [Cell(r+1, c) for r,c in path_raw] # move rows to correct starting position
+        self.goal = self.path[0].pose()
+        self.path_index = 0
 
         # Setup publishers
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 5)
 
         # Setup subscribers
+        sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
 
+    def odom_callback(self, msg):
+        self.pose.x = msg.pose.pose.position.x
+        self.pose.y = msg.pose.pose.position.y
+
+        rot_q = msg.pose.pose.orientation
+        (_, _, self.pose.theta) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
+
+    def next_pose(self):
+        try:
+            self.path_index += 1
+            self.goal = self.path[self.path_index].pose()
+        except IndexError:
+            rospy.logwarn("REACHED END OF PATH!")
 
     def run(self):
         rate = rospy.Rate(10) # 10hz
+        speed = Twist()
 
         while not rospy.is_shutdown():
             # Calculate command
             # Do other stuff
 
+            inc_x = self.goal.x - self.pose.x
+            inc_y = self.goal.y - self.pose.y
+
+            angle_to_goal = atan2(inc_y, inc_x)
+
+            if (inc_x**2 + inc_y**2)**0.5 < 0.05:
+                speed.linear.x = 0.0
+                speed.angular.z = 0.0
+                self.next_pose()
+
+            elif abs(angle_to_goal - self.pose.theta) > 0.02:
+                speed.linear.x = 0.0
+                if (self.pose.theta < angle_to_goal):
+                    if (self.pose.theta < -0.1 and angle_to_goal > 0):
+                        speed.angular.z = -0.3
+                    else:
+                        speed.angular.z = 0.3
+                elif (self.pose.theta > angle_to_goal):
+                    speed.angular.z = -0.3
+            else:
+                speed.linear.x = 0.08
+                speed.angular.z = 0.0
+
+            self.cmd_vel_pub.publish(speed)
+
             rate.sleep()
-
-
-    def loadMap(self):
-        # Load image and crop
-        img = cv2.imread("/home/nico/Desktop/map_backup.pgm", cv2.IMREAD_GRAYSCALE)
-        img = self.autocrop(img)
-
-        # Convert colors into 0 and 1
-        dark_colors = np.where(img <= 220)
-        img[dark_colors] = 0
-        light_colors = np.where(img > 220)
-        img[light_colors] = 1
-
-        # Flip number so that 0 = free and 1 = occupied
-        img = np.logical_not(img).astype(int)
-
-        # Save image to desktop
-        cv2.imwrite("/home/nico/Desktop/filtered_map.pgm", img*255)
-
-        return img
-
-    def autocrop(self, image, lower_threshold=100, upper_threshold=220):
-        """Crops any edges within to threshold boundaries (used for crop gray/unkown area)
-
-        Crops blank image to 1x1.
-
-        Returns cropped image.
-
-        """
-        if len(image.shape) == 3:
-            flatImage = np.max(image, 2)
-        else:
-            flatImage = image
-        assert len(flatImage.shape) == 2
-
-        rows = np.where((np.max(flatImage, 0) < lower_threshold) | (np.max(flatImage, 0) > upper_threshold))[0]
-        if rows.size:
-            cols = np.where((np.max(flatImage, 1) > upper_threshold) | (np.min(flatImage, 1) < lower_threshold))[0]
-            image = image[cols[0]: cols[-1] + 1, rows[0]: rows[-1] + 1]
-        else:
-            image = image[:1, :1]
-
-        return image
-
-
 
 
 if __name__ == '__main__':
