@@ -7,6 +7,11 @@
     <!-- Run gmapping node -->
 	  <node pkg="gmapping" type="slam_gmapping" name="gmapping">
   	   <remap from="scan" to="base_scan_0" />
+       <param name="xmin" value="-3.0"/>
+       <param name="ymin" value="-6.0"/>
+       <param name="xmax" value="3.0"/>
+       <param name="ymax" value="6.0"/>
+       <param name="delta" value="0.20"/>
     </node>
     
     <!-- Run maze_basic node -->
