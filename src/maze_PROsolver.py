@@ -30,7 +30,7 @@ class ProSolver:
         self.pose = Pose(0, 0, 0) # set initial pose
         self.path = [Cell(r+1, c) for r,c in path_raw] # move rows to correct starting position
         self.goal = self.path[0].pose()
-        self.path_index = 0;
+        self.path_index = 0
 
         # Setup publishers
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 5)
@@ -73,7 +73,10 @@ class ProSolver:
             elif abs(angle_to_goal - self.pose.theta) > 0.02:
                 speed.linear.x = 0.0
                 if (self.pose.theta < angle_to_goal):
-                    speed.angular.z = 0.3
+                    if (self.pose.theta < -0.1 and angle_to_goal > 0):
+                        speed.angular.z = -0.3
+                    else:
+                        speed.angular.z = 0.3
                 elif (self.pose.theta > angle_to_goal):
                     speed.angular.z = -0.3
             else:
