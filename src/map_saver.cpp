@@ -25,8 +25,8 @@ private:
 		*  occupancy grid from /map topic as image */
 
 		// Save as map_backup.pgm
-		system("cd ~/Desktop && rosrun map_server map_saver -f map_backup");
-		ROS_WARN_STREAM("Saving image of map as map_backup.pgm in " << "~/Desktop/" << "map_backup.pgm");
+		system("roscd robotcraft_maze && rosrun map_server map_saver -f map_backup");
+		ROS_WARN_STREAM("Saving image of map as map_backup.pgm in " << "~/catkin_ws/src/robotcraft_maze/scans");
 
 	}
 

@@ -1,10 +1,13 @@
+import os
 import cv2
 import numpy as np
 
 def loadMap():
     # Load image and crop
-    img = cv2.imread("/home/nico/Desktop/map_backup.pgm", cv2.IMREAD_GRAYSCALE)
-    img = autocrop(img)
+
+    scans_dir = os.path.join(os.path.expanduser("~"),"catkin_ws/src/robotcraft_maze/scans/")
+    img = cv2.imread(os.path.join(scans_dir, "map_backup.pgm"), cv2.IMREAD_GRAYSCALE)
+    img = autocrop(img) 
 
     # Convert colors into 0 and 1
     dark_colors = np.where(img <= 220)
@@ -15,8 +18,8 @@ def loadMap():
     # Flip number so that 0 = free and 1 = occupied
     img = np.logical_not(img).astype(int)
 
-    # Save image to desktop
-    cv2.imwrite("/home/nico/Desktop/filtered_map.pgm", img*255)
+    # Save image to scans folder
+    cv2.imwrite(os.path.join(scans_dir, "map_filtered.pgm"), img*255)
 
     return img
 
