@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-import map_loader as ml
+from map_loader import MapLoader
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
@@ -25,8 +25,8 @@ class Cell:
 class ProSolver:
     def __init__(self):
         rospy.init_node('maze_pro_solver', anonymous=True)
-
-        self.map_matrix = ml.loadMap()
+        self.map_loader = MapLoader(crop_image=True)
+        self.map_matrix = self.map_loader.loadMap()
         self.pose = Pose(0, 0, 0) # set initial pose
         self.path = [Cell(r+1, c) for r,c in path_raw] # move rows to correct starting position
         self.goal = self.path[0].pose()
