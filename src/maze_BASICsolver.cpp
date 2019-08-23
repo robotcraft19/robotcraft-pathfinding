@@ -15,6 +15,7 @@
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/LaserScan.h"
 #include <string>
+#include <ctime>
 
 #define TARGET_DISTANCE 0.20
 
@@ -207,27 +208,31 @@ public:
     BasicSolver(){
         // Initialize ROS
         this->n = ros::NodeHandle();
+        srand(time(NULL));
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
 
         ROS_INFO("Right = %d\n", this->right);
         ROS_INFO("Left = %d\n", this->left);
+        int rnd = rand() % 100;
 
         if (left && right) 
         {
-            if (rand() > 0.5) 
+            if (rnd > 50)
                 left = false;
-            else
+            else:
                 right = false;
+            ROS_INFO("rand = %d\n", rnd);
         }
 
-        if (!left && !right) 
+        if (!left && !right)
         {
-            if (rand() > 0.5) 
+            if (rnd > 50)
                 left = true;
             else
                 right = true;
+            ROS_INFO("rand = %d\n", rnd);
         }
 
         ROS_INFO("Right = %d\n", right);
