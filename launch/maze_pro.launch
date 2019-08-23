@@ -3,7 +3,8 @@
 <launch>
   <!-- Run stage node -->
   <node pkg="stage_ros" type="stageros" name="stageros" args="$(find robotcraft_maze)/world/robotcraft_maze.world" />
-
+  <!-- Run map server node -->
+  <node pkg="map_server" type="map_server" name="map_server" args="$(find robotcraft_maze)/scans/map.yaml"/>
   <!-- Run maze_pro node -->
   <node pkg="robotcraft_maze" type="maze_PROsolver.py" name="maze_pro" output="screen" />
 
