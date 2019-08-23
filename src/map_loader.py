@@ -48,6 +48,8 @@ class MapLoader:
 
         self.place_robot(img)
         self.place_target(img)
+        np.savetxt(os.path.join(os.path.expanduser("~"),'Desktop/array.txt'), img, delimiter='', fmt='%d')
+        rospy.loginfo('Saved array to text file...')
 
         return img
 
@@ -70,11 +72,30 @@ class MapLoader:
 
         # Mark robot start cell with -1
         img[row, column] = -1 # changes value in place, no need to return
-        np.savetxt(os.path.join(os.path.expanduser("~"),'Desktop/array.txt'), img, delimiter='', fmt='%d')
-        rospy.loginfo('Saved array to text file...')
 
     def place_target(self, img):
-        pass
+        x_pos = 0
+        y_pos = 0
+
+        with open(os.path.join(os.path.expanduser("~"),
+            'catkin_ws/src/robotcraft_maze/scans/robot_position.txt'), 'r') as f:
+            x_pos = float(f.readline())
+            y_pos = float(f.readline())
+
+        # Get matrix coordinates of initial robot position
+        result = np.where(img == -1)
+        initial_pos = (result[0][0], result[1][0]) # extract indices
+
+        # Calculate target cell using final pose and starting cell
+        resolution = self.occupancy_grid.info.resolution
+        target_row = initial_pos[0] + int(round(-y_pos / resolution))
+        target_col = initial_pos[1] + int(round(x_pos / resolution))
+
+        # Mark target cell with -3
+        img[target_row, target_col] = -2 # changes value in place, no need to return
+
+        # TODO: Move target cell by one in any direction if right next to wall,
+        # otherwise A* algorithm might fail depending on implementation
 
     def autocrop(self, image, lower_threshold=100, upper_threshold=220):
         """Crops any edges within to threshold boundaries (used for crop gray/unkown area)
