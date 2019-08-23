@@ -52,15 +52,12 @@ class MapLoader:
         return img
 
     def place_robot(self, img):
-        # Alternative approach: place robot in uncropped image,
-        # then crop image and find coordinates of -1
         # Place robot at origin of map
         origin_x = self.occupancy_grid.info.origin.position.x
         origin_y = self.occupancy_grid.info.origin.position.y
         resolution = self.occupancy_grid.info.resolution
 
         if self.crop_image == True:
-            # TODO: How to calculate?
             n_rows_removed_top = self.cropped_rows[0][1]-self.cropped_rows[0][0]
             n_cols_removed_left = self.cropped_cols[0][1]-self.cropped_cols[0][0]
 
