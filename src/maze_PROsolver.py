@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import rospy
 from map_loader import MapLoader
+from path_finder import PathFinder
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
 from math import atan2
 
-path_raw = [(-1, 1), (-1, 2), (-1, 3), (-1, 4), (-1, 5), (0, 6), (1, 6), (2, 7), (3, 8), (4, 9), (4, 10), (4, 11), (4, 12), (4, 13), (4, 14), (4, 15), (4, 16), (4, 17), (4, 18), (4, 19), (3, 20), (2, 20), (1, 20), (0, 21), (0, 22), (0, 23), (1, 24), (2, 24), (3, 24), (4, 24), (5, 24), (6, 24), (7, 24), (8, 23), (8, 22), (8, 21), (9, 20), (10, 20), (11, 20), (12, 19), (13, 18), (13, 17), (13, 16), (14, 15), (15, 15), (16, 14), (16, 13), (16, 12), (15, 11), (14, 10), (13, 9), (13, 8), (13, 7), (12, 6), (12, 5), (12, 4), (13, 3), (14, 2), (15, 2), (16, 2), (17, 2), (18, 2), (19, 2), (20, 2), (21, 3), (21, 4), (22, 5), (23, 5)]
+#path_raw = [(-1, 1), (-1, 2), (-1, 3), (-1, 4), (-1, 5), (0, 6), (1, 6), (2, 7), (3, 8), (4, 9), (4, 10), (4, 11), (4, 12), (4, 13), (4, 14), (4, 15), (4, 16), (4, 17), (4, 18), (4, 19), (3, 20), (2, 20), (1, 20), (0, 21), (0, 22), (0, 23), (1, 24), (2, 24), (3, 24), (4, 24), (5, 24), (6, 24), (7, 24), (8, 23), (8, 22), (8, 21), (9, 20), (10, 20), (11, 20), (12, 19), (13, 18), (13, 17), (13, 16), (14, 15), (15, 15), (16, 14), (16, 13), (16, 12), (15, 11), (14, 10), (13, 9), (13, 8), (13, 7), #(12, 6), (12, 5), (12, 4), (13, 3), (14, 2), (15, 2), (16, 2), (17, 2), (18, 2), (19, 2), (20, 2), (21, 3), (21, 4), (22, 5), (23, 5)]
 
 class Pose:
     def __init__(self, x, y, theta):
@@ -15,22 +16,30 @@ class Pose:
         self.theta = theta
 
 class Cell:
+    resolution = 0.2
     def __init__(self, row, column):
         self.row = row
         self.column = column
 
     def pose(self):
-        return Pose(self.column * 0.2, -self.row * 0.2, 0)
+        return Pose(self.column * Cell.resolution, -self.row * Cell.resolution, 0)
 
 class ProSolver:
     def __init__(self):
         rospy.init_node('maze_pro_solver', anonymous=True)
-        self.map_loader = MapLoader(crop_image=True)
+
+        # Load maze matrix
+        self.map_loader = MapLoader(crop_image=False) # do not crop if target outside of maze
         self.map_matrix = self.map_loader.loadMap()
-        self.pose = Pose(0, 0, 0) # set initial pose
-        self.path = [Cell(r+1, c) for r,c in path_raw] # move rows to correct starting position
+        Cell.resolution = self.map_loader.occupancy_grid.info.resolution
+
+        # Calculate path
+        self.path_finder = PathFinder(self.map_matrix)
+        raw_path = self.path_finder.calculate_path()
+        self.path = [Cell(r-self.path_finder.robot.row, c- self.path_finder.robot.column) for r,c in raw_path] # move rows to correct starting position
         self.goal = self.path[0].pose()
         self.path_index = 0
+        self.pose = Pose(0, 0, 0)
 
         # Setup publishers
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 5)

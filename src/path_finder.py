@@ -1,0 +1,179 @@
+from __future__ import print_function
+import numpy as np
+
+complex_a = True
+
+class Node:
+    target = None
+
+    def __init__(self, row, column, g, parent):
+        self.row = row
+        self.column = column
+        self.parent = parent
+        self.g = g # total cost so far
+        self.h = self.calculate_heuristic() # estimated cost from node to goal
+        self.f = self.g + self.h # total estimated cost of path through node
+
+    def calculate_heuristic(self):
+        if Node.target == None:
+            return 0
+
+        global complex_a
+        if complex_a == False: # only for directions
+            # return manhattan distance
+            return abs(self.row - Node.target.row) + abs(self.column - Node.target.column)
+        else:
+            # return euclidian distance
+            return ((self.row - Node.target.row)**2 + (self.column - Node.target.column)**2)**0.5
+
+    def __lt__(self, other):
+        # comparison method for sorting priority
+        return self.f < other.f
+
+    def __eq__(self, other):
+        # check if nodes have same coordinates
+        if (isinstance(other, Node)):
+            return self.row == other.row and self.column == other.column
+        return False
+
+    def __str__(self):
+        return 'Node({}, {})'.format(self.row, self.column)
+
+    def __repr__(self):
+        return 'Node({}, {}, {}, {})'.format(self.row, self.column, self.g, self.parent)
+
+
+class PathFinder:
+
+    def __init__(self, matrix):
+        self.matrix = np.array(matrix)
+
+        # Get matrix coorinates of target position
+        result = np.where(self.matrix == -2)
+        self.target = Node(result[0][0], result[1][0], -1, None) # extract indices
+
+        # Make target position globally accessible within Node class for distance calculation
+        Node.target = self.target
+
+        # Get matrix coordinates of initial robot position and create starting node
+        result = np.where(self.matrix == -1)
+        self.robot = Node(result[0][0], result[1][0], 0, None) # extract indices
+
+        # Initialize open nodes queue containing start node
+        self.open_nodes = [self.robot]
+        # Initialize empty closed nodes queue
+        self.closed_nodes = []
+        # Initialize matrix with possible movements and their cost
+        self.directions = self.initialize_directions()
+
+        # Start A* algorithm to calculate paths
+        self.calculate_path()
+
+    def calculate_path(self):
+        while(len(self.open_nodes) > 0):
+            self.open_nodes.sort() # sort list according to their f values
+            current_node = self.open_nodes[0] # extract node with highest priority
+            if current_node == self.target:
+                path = self.reconstruct_path(current_node)
+                return path
+
+            else:
+                # Remove current node from open nodes list and append to closed list
+                self.closed_nodes.append(self.open_nodes.pop(0))
+
+                # Create list of neighbor nodes
+                neighbors = [Node(current_node.row + dir[0], current_node.column +dir[1],
+                    current_node.g + dir[2], current_node) for dir in self.directions]
+                # Filter nodes that are out of bounds
+                neighbors = [nb for nb in neighbors
+                    if 0 <= nb.row < self.matrix.shape[0]
+                        and 0 <= nb.column < self.matrix.shape[1]]
+                # Filter nodes that are occupied
+                tmp_neighbors = [nb for nb in neighbors if self.matrix[nb.row][nb.column] != 1]
+                # Filter nodes that are right next to wall
+                neighbors = []
+                for nb in tmp_neighbors:
+                    if nb == self.target:
+                        neighbors.append(nb)
+                        continue
+
+                    ok_flag = True
+                    for dir in self.directions:
+                        try:
+                            if self.matrix[nb.row + dir[0]][nb.column + dir[1]] == 1:
+                                ok_flag = False
+                                break
+                        except:
+                            # out of bounds
+                            pass
+
+                    if ok_flag == True:
+                        neighbors.append(nb)
+
+                for neighbor_node in neighbors:
+                    # Check if neighbor_node is in open nodes list
+                    if neighbor_node in self.open_nodes:
+                        # Extract pre-existing neighbor node that has same coordinates
+                        # but different g and f values
+                        ex_nb = self.open_nodes.pop(self.open_nodes.index(neighbor_node))
+
+                        # Add current path to neighbor to list ist better
+                        if neighbor_node.g < ex_nb.g:
+                            self.open_nodes.append(neighbor_node)
+                        else:
+                            #Otherwise readd existing path to neighbor
+                            self.open_nodes.append(ex_nb)
+                    elif not neighbor_node in self.closed_nodes:
+                        # Otherwise add neighbor to open nodes list
+                        self.open_nodes.append(neighbor_node)
+
+        # No path found, ran out of open nodes
+        print("============NO PATH TO TARGET FOUND============")
+        return [(self.robot.row, self.robot.column)] # no movement
+
+    def reconstruct_path(self, node):
+        current_node = node
+        path = []
+        while(current_node != self.robot):
+            path.append(current_node)
+            current_node = current_node.parent
+
+        path.reverse()
+        path = [(node.row, node.column) for node in path]
+        self.print_map(path)
+        return path
+
+    def print_map(self, path):
+        map = self.matrix.copy()
+        for point in path:
+            map[point[0], point[1]] = 8
+
+        for row in map:
+            for col in row:
+                print(col, end = ' ')
+            print()
+
+    def initialize_directions(self):
+        global complex_a
+        directions = []
+        if complex_a  == True:
+            # matrix including row and column translation and movement cost
+            directions = [
+                [1, 0, 1],
+                [0, 1, 1],
+                [-1, 0, 1],
+                [0, -1, 1],
+                [1, 1, 2**0.5],
+                [-1, 1, 2**0.5],
+                [1, -1, 2**0.5],
+                [-1, -1, 2**0.5],
+            ]
+        else:
+            # matrix including row and column translation and movement cost
+            directions = [
+                [1, 0, 1],
+                [0, 1, 1],
+                [-1, 0, 1],
+                [0, -1, 1]
+            ]
+        return directions
