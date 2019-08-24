@@ -6,10 +6,21 @@ import numpy as np
 from nav_msgs.srv import GetMap, GetMapRequest
 
 class MapLoader:
-    def __init__(self, crop_image=False):
-        self.crop_image = crop_image
+    def __init__(self, start=None, target=None, crop_image=False):
         self.occupancy_grid = self.request_occupancy_grid()
 
+        self.start = start # tuple with x and y coordinates in m
+        self.target = target # in respect to origin of maze (upper left corner)
+
+        # assert that both values are either provided or not provided
+        assert (self.start and self.target) \
+            or (not self.start and not self.target)
+
+        # if parameters are provided, matrix needs to be cropped to find origin
+        if self.start:
+            self.crop_image = True
+        else:
+            self.crop_image = crop_image
 
     def request_occupancy_grid(self):
         # Make request to map_loader service
@@ -55,48 +66,57 @@ class MapLoader:
         return img
 
     def place_robot(self, img):
-        # Place robot at origin of map
         origin_x = self.occupancy_grid.info.origin.position.x
         origin_y = self.occupancy_grid.info.origin.position.y
         resolution = self.occupancy_grid.info.resolution
 
-        if self.crop_image == True:
-            n_rows_removed_top = self.cropped_rows[0][1]-self.cropped_rows[0][0]
-            n_cols_removed_left = self.cropped_cols[0][1]-self.cropped_cols[0][0]
+        if not self.start:
+            # Place robot at origin of map
+            if self.crop_image == True:
+                n_rows_removed_top = self.cropped_rows[0][1]-self.cropped_rows[0][0]
+                n_cols_removed_left = self.cropped_cols[0][1]-self.cropped_cols[0][0]
 
-            row = (self.orig_img.shape[1]-1) - int(round((abs(origin_y) / resolution))) - n_rows_removed_top  # flipped coordinate system on y-axis
-            column = int(round((abs(origin_x) / resolution))) - n_cols_removed_left
+                row = (self.orig_img.shape[1]-1) - int(round((abs(origin_y) / resolution))) - n_rows_removed_top  # flipped coordinate system on y-axis
+                column = int(round((abs(origin_x) / resolution))) - n_cols_removed_left
+            else:
+                # Calculate row and column of cell
+                row = (img.shape[1]-1) - int(round((abs(origin_y) / resolution))) # flipped coordinate system on y-axis
+                column = int(round((abs(origin_x) / resolution)))
         else:
-            # Calculate row and column of cell
-            row = (img.shape[1]-1) - int(round((abs(origin_y) / resolution))) # flipped coordinate system on y-axis
-            column = int(round((abs(origin_x) / resolution)))
+            print("Placed robot from launch file")
+            row = int(round(-self.start[1] / resolution))
+            column = int(round(self.start[0] / resolution))
 
         # Mark robot start cell with -1
         img[row, column] = -1 # changes value in place, no need to return
 
     def place_target(self, img):
-        x_pos = 0
-        y_pos = 0
-
-        with open(os.path.join(os.path.expanduser("~"),
-            'catkin_ws/src/robotcraft_maze/scans/robot_position.txt'), 'r') as f:
-            x_pos = float(f.readline())
-            y_pos = float(f.readline())
-
-        # Get matrix coordinates of initial robot position
-        result = np.where(img == -1)
-        initial_pos = (result[0][0], result[1][0]) # extract indices
-
-        # Calculate target cell using final pose and starting cell
         resolution = self.occupancy_grid.info.resolution
-        target_row = initial_pos[0] + int(round(-y_pos / resolution))
-        target_col = initial_pos[1] + int(round(x_pos / resolution))
+
+        if not self.start:
+            x_pos = 0
+            y_pos = 0
+
+            with open(os.path.join(os.path.expanduser("~"),
+                'catkin_ws/src/robotcraft_maze/scans/robot_position.txt'), 'r') as f:
+                x_pos = float(f.readline())
+                y_pos = float(f.readline())
+
+            # Get matrix coordinates of initial robot position
+            result = np.where(img == -1)
+            initial_pos = (result[0][0], result[1][0]) # extract indices
+
+            # Calculate target cell using final pose and starting cell
+            target_row = initial_pos[0] + int(round(-y_pos / resolution))
+            target_col = initial_pos[1] + int(round(x_pos / resolution))
+        else:
+            target_row = int(round(-self.target[1] / resolution))
+            target_col = int(round(self.target[0] / resolution))
+
 
         # Mark target cell with -3
         img[target_row, target_col] = -2 # changes value in place, no need to return
 
-        # TODO: Move target cell by one in any direction if right next to wall,
-        # otherwise A* algorithm might fail depending on implementation
 
     def autocrop(self, image, lower_threshold=100, upper_threshold=220):
         """Crops any edges within to threshold boundaries (used for crop gray/unkown area)

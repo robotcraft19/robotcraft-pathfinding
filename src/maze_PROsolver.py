@@ -29,8 +29,19 @@ class ProSolver:
     def __init__(self):
         rospy.init_node('maze_pro_solver', anonymous=True)
 
+        # Try to load parameters from launch file, otherwise set to None
+        try:
+            positions = rospy.get_param('~position')
+            startX, startY =  positions['startX'], positions['startY']
+            targetX, targetY =  positions['targetX'], positions['targetY']
+            start = (startX, startY)
+            target = (targetX, targetY)
+            print(start, target)
+        except:
+            start, target = None, None
+
         # Load maze matrix
-        self.map_loader = MapLoader(crop_image=False) # do not crop if target outside of maze
+        self.map_loader = MapLoader(start, target) # do not crop if target outside of maze
         self.map_matrix = self.map_loader.loadMap()
         Cell.resolution = self.map_loader.occupancy_grid.info.resolution
 
