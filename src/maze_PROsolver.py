@@ -88,7 +88,6 @@ class ProSolver:
                             speed.angular.z = 0.3
                         else:
                             speed.angular.z = -0.3
-                            rospy.logwarn("Case 1")
                     else:
                         speed.angular.z = 0.3
                 elif (self.pose.theta > angle_to_goal):
@@ -97,10 +96,8 @@ class ProSolver:
                             speed.angular.z = 0.3
                         else:
                             speed.angular.z = -0.3
-                            rospy.logwarn("Case 3")
                     else:
                         speed.angular.z = -0.3
-                        rospy.logwarn("Case 2")
             else:
                 speed.linear.x = 0.08
                 speed.angular.z = 0.0
