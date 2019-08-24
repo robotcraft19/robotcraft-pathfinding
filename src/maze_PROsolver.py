@@ -82,12 +82,24 @@ class ProSolver:
             elif abs(angle_to_goal - self.pose.theta) > 0.02:
                 speed.linear.x = 0.0
                 if (self.pose.theta < angle_to_goal):
-                    if (self.pose.theta < -0.1 and angle_to_goal > 0):
-                        speed.angular.z = -0.3
+                    if (self.pose.theta < -0.2 and angle_to_goal > 0):
+                        if (abs(self.pose.theta > (pi/2)) and abs(angle_to_goal > (pi/2))):
+                            speed.angular.z = 0.3
+                        else:
+                            speed.angular.z = -0.3
+                            rospy.logwarn("Case 1")
                     else:
                         speed.angular.z = 0.3
                 elif (self.pose.theta > angle_to_goal):
-                    speed.angular.z = -0.3
+                    if (angle_to_goal < -0.2 and self.pose.theta > 0):
+                        if (abs(self.pose.theta > (pi/2)) or abs(angle_to_goal > (pi/2))):
+                            speed.angular.z = 0.3
+                        else:
+                            speed.angular.z = -0.3
+                            rospy.logwarn("Case 3")
+                    else:
+                        speed.angular.z = -0.3
+                        rospy.logwarn("Case 2")
             else:
                 speed.linear.x = 0.08
                 speed.angular.z = 0.0
