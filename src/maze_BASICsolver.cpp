@@ -221,7 +221,7 @@ public:
         {
             if (rnd > 50)
                 left = false;
-            else:
+            else
                 right = false;
             ROS_INFO("rand = %d\n", rnd);
         }
