@@ -7,12 +7,12 @@
   <node pkg="map_server" type="map_server" name="map_server" args="$(find robotcraft_maze)/scans/map.yaml"/>
   <!-- Run maze_pro node -->
   <node pkg="robotcraft_maze" type="maze_PROsolver.py" name="maze_pro" output="screen">
-      <rosparam param="position">
-          startX: 0.00
-          startY: -0.20
+      <!-- <rosparam param="position">
+          startX: 0.20
+          startY: -0.60
           targetX: 0.95
           targetY: -5.10
-      </rosparam>
+      </rosparam> -->
   </node>
 
 </launch>

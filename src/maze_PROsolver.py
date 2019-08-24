@@ -37,7 +37,7 @@ class ProSolver:
             target = (targetX, targetY)
             print(start, target)
         except:
-            start, target = None
+            start, target = None, None
 
         # Load maze matrix
         self.map_loader = MapLoader(start, target) # do not crop if target outside of maze
