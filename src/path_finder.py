@@ -1,5 +1,6 @@
 from __future__ import print_function
 import numpy as np
+import os
 
 complex_a = True
 
@@ -140,18 +141,24 @@ class PathFinder:
 
         path.reverse()
         path = [(node.row, node.column) for node in path]
-        self.print_map(path)
+        self.write_map(path)
         return path
 
-    def print_map(self, path):
+    def write_map(self, path, print_output=False):
+        # Writes map to file and optionally prints it
         map = self.matrix.copy()
-        for point in path:
-            map[point[0], point[1]] = 8
-
-        for row in map:
-            for col in row:
-                print(col, end = ' ')
-            print()
+        with open(os.path.join(os.path.expanduser('~'),
+            'catkin_ws/src/robotcraft_maze/scans/path_route.txt'), 'w') as f:
+            for point in path:
+                map[point[0], point[1]] = 7
+            for row in map:
+                for col in row:
+                    f.write(str(col))
+                    if print_output == True:
+                        print(col, end = '')
+                f.write('\n')
+                if print_output == True:
+                    print()
 
     def initialize_directions(self):
         global complex_a

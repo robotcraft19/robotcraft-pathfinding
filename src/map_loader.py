@@ -48,8 +48,9 @@ class MapLoader:
 
         self.place_robot(img)
         self.place_target(img)
-        np.savetxt(os.path.join(os.path.expanduser("~"),'Desktop/array.txt'), img, delimiter='', fmt='%d')
-        rospy.loginfo('Saved array to text file...')
+        np.savetxt(os.path.join(os.path.expanduser("~"),
+            'catkin_ws/src/robotcraft_maze/scans/map_matrix.txt'), img, delimiter='', fmt='%d')
+        rospy.loginfo('Saved map matrix to text file...')
 
         return img
 

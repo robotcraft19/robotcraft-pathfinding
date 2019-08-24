@@ -31,7 +31,7 @@ private:
 		*  occupancy grid from /map topic as image */
 
 		// Save as map_backup.pgm
-		system("roscd robotcraft_maze && rosrun map_server map_saver -f map_backup");
+		system("cd ~/catkin_ws/src/robotcraft_maze/scans && rosrun map_server map_saver -f map_backup");
 	}
 
 	void saveRobotPose() {
