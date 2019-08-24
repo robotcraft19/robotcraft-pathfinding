@@ -132,7 +132,7 @@ class MapLoader:
             flatImage = image
         assert len(flatImage.shape) == 2
 
-        rows = np.where((np.max(flatImage, 0) < lower_threshold) | (np.max(flatImage, 0) > upper_threshold))[0]
+        rows = np.where((np.min(flatImage, 0) < lower_threshold) | (np.max(flatImage, 0) > upper_threshold))[0]
         if rows.size:
             cols = np.where((np.max(flatImage, 1) > upper_threshold) | (np.min(flatImage, 1) < lower_threshold))[0]
             self.cropped_rows = [(0, cols[0]), (cols[-1], image.shape[1])]
