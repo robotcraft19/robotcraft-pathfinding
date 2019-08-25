@@ -24,7 +24,7 @@
     <param name="left" type="bool" value="true" />
     <param name="right" type="bool" value="true" />
 
-  <!-- Run map saver node, periodically saves map -->
+  <!-- Run map saver node, periodically saves map and robot position backups -->
   <node pkg="robotcraft_maze" type="map_saver" name="map_saver_controller_node" output="screen"/>
 
 </launch>
