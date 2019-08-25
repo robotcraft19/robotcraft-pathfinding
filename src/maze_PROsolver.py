@@ -44,7 +44,7 @@ class ProSolver:
         # Calculate path
         self.path_finder = PathFinder(self.map_matrix)
         raw_path = self.path_finder.calculate_path()
-        self.path = [Cell(r-self.path_finder.robot.row, c- self.path_finder.robot.column) for r,c in raw_path] # move rows to correct starting position
+        self.path = [Cell(r-self.path_finder.start.row, c- self.path_finder.start.column) for r,c in raw_path] # move rows to correct starting position
         self.goal = self.path[0].pose()
         self.path_index = 0
         self.pose = Pose(0, 0, 0)

@@ -8,7 +8,7 @@
   <!-- Run maze_pro node -->
   <node pkg="robotcraft_maze" type="maze_PROsolver.py" name="maze_pro" output="screen">
       <rosparam param="position">
-          startX: 0.00
+          startX: 0.05
           startY: -0.40
           targetX: 1.20
           targetY: -5.20

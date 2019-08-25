@@ -58,10 +58,10 @@ class PathFinder:
 
         # Get matrix coordinates of initial robot position and create starting node
         result = np.where(self.matrix == -1)
-        self.robot = Node(result[0][0], result[1][0], 0, None) # extract indices
+        self.start = Node(result[0][0], result[1][0], 0, None) # extract indices
 
         # Initialize open nodes queue containing start node
-        self.open_nodes = [self.robot]
+        self.open_nodes = [self.start]
         # Initialize empty closed nodes queue
         self.closed_nodes = []
         # Initialize matrix with possible movements and their cost
@@ -91,25 +91,28 @@ class PathFinder:
                         and 0 <= nb.column < self.matrix.shape[1]]
                 # Filter nodes that are occupied
                 tmp_neighbors = [nb for nb in neighbors if self.matrix[nb.row][nb.column] != 1]
-                # Filter nodes that are right next to wall
-                neighbors = []
-                for nb in tmp_neighbors:
-                    if nb == self.target:
-                        neighbors.append(nb)
-                        continue
+                # Filter nodes that are right next to wall (skip if current_node = start)
+                if not current_node == self.start:
+                    neighbors = []
+                    for nb in tmp_neighbors:
+                        if nb == self.target:
+                            neighbors.append(nb)
+                            continue
 
-                    ok_flag = True
-                    for dir in self.directions:
-                        try:
-                            if self.matrix[nb.row + dir[0]][nb.column + dir[1]] == 1:
-                                ok_flag = False
-                                break
-                        except:
-                            # out of bounds
-                            pass
+                        ok_flag = True
+                        for dir in self.directions:
+                            try:
+                                if self.matrix[nb.row + dir[0]][nb.column + dir[1]] == 1:
+                                    ok_flag = False
+                                    break
+                            except:
+                                # out of bounds
+                                pass
 
-                    if ok_flag == True:
-                        neighbors.append(nb)
+                        if ok_flag == True:
+                            neighbors.append(nb)
+                else:
+                    neighbors = tmp_neighbors
 
                 for neighbor_node in neighbors:
                     # Check if neighbor_node is in open nodes list
@@ -130,12 +133,12 @@ class PathFinder:
 
         # No path found, ran out of open nodes
         print("============NO PATH TO TARGET FOUND============")
-        return [(self.robot.row, self.robot.column)] # no movement
+        return [(self.start.row, self.start.column)] # no movement
 
     def reconstruct_path(self, node):
         current_node = node
         path = []
-        while(current_node != self.robot):
+        while(current_node != self.start):
             path.append(current_node)
             current_node = current_node.parent
 
