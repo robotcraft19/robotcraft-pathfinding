@@ -329,7 +329,7 @@ int main(int argc, char **argv){
 
     // Create our controller object and run it
     auto controller = BasicSolver();
-    sleep(3);
+    sleep(5);
     controller.run();
 
     // And make good on our promise
