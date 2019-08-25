@@ -18,6 +18,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "nav_msgs/Odometry.h"
 #include "std_srvs/Empty.h"
+#include <ctime>
 
 #define TARGET_DISTANCE 0.20
 
@@ -262,16 +263,16 @@ public:
     BasicSolver(){
         // Initialize ROS
         this->n = ros::NodeHandle();
+	srand(time(NULL));
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
 
-        ROS_INFO("Right = %d\n", this->right);
-        ROS_INFO("Left = %d\n", this->left);
+        int rnd = rand() % 100;
 
         if (left && right)
         {
-            if (rand() > 0.5)
+            if (rnd > 50)
                 left = false;
             else
                 right = false;
@@ -279,7 +280,7 @@ public:
 
         if (!left && !right)
         {
-            if (rand() > 0.5)
+            if (rnd > 50)
                 left = true;
             else
                 right = true;
@@ -289,7 +290,7 @@ public:
         ROS_INFO("Left = %d\n", left);
 
         // Setup publishers
-    	  this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
+    	this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
 
         // Setup subscribers
         this->front_ir_sub = this->n.subscribe("base_scan_1", 10, &BasicSolver::frontIRCallback, this);
