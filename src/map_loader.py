@@ -38,7 +38,7 @@ class MapLoader:
 
         # Load image (alternatively use occupancy_grid data and reshape)
         scans_dir = os.path.join(os.path.expanduser("~"),"catkin_ws/src/robotcraft_maze/scans/")
-        self.orig_img = cv2.imread(os.path.join(scans_dir, "map_backup.pgm"), cv2.IMREAD_GRAYSCALE)
+        self.orig_img = cv2.imread(os.path.join(scans_dir, "map.pgm"), cv2.IMREAD_GRAYSCALE)
 
         if self.crop_image == True:
             img = self.autocrop(self.orig_img)
