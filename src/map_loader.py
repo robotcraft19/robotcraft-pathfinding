@@ -57,8 +57,8 @@ class MapLoader:
         # Save filtered image to scans folder
         cv2.imwrite(os.path.join(scans_dir, "map_filtered.pgm"), img*255)
 
-        self.place_robot(img)
-        self.place_target(img)
+        img = self.place_robot(img)
+        img = self.place_target(img)
         np.savetxt(os.path.join(os.path.expanduser("~"),
             'catkin_ws/src/robotcraft_maze/scans/map_matrix.txt'), img, delimiter='', fmt='%d')
         rospy.loginfo('Saved map matrix to text file...')
@@ -88,7 +88,8 @@ class MapLoader:
             column = int(round(self.start[0] / resolution))
 
         # Mark robot start cell with -1
-        img[row, column] = -1 # changes value in place, no need to return
+        img[row, column] = -1 # changes value in place
+        return img
 
     def place_target(self, img):
         resolution = self.occupancy_grid.info.resolution
@@ -113,10 +114,29 @@ class MapLoader:
             target_row = int(round(-self.target[1] / resolution))
             target_col = int(round(self.target[0] / resolution))
 
+        # Extend matrix in case target cell is outside of maze
+        if target_row > (img.shape[0]-1):
+            diff = target_row - (img.shape[0]-1)
+            zeros = np.zeros(shape=(diff, img.shape[1]))
+            img = np.r_[img, zeros]
+        if target_row < 0:
+            diff = -target_row
+            zeros = np.zeros(shape=(diff, img.shape[1]))
+            img = np.r_[zeros, img]
+            target_row = 0
+        if target_col > (img.shape[1]-1):
+            diff = target_col - (img.shape[1]-1)
+            zeros = np.zeros(shape=(img.shape[0], diff))
+            img = np.c_[img, zeros]
+        if target_col < 0:
+            diff = -target_col
+            zeros = np.zeros(shape=(img.shape[0], diff))
+            img = np.c_[zeros, img]
+            target_col = 0
 
-        # Mark target cell with -3
+        # Mark target cell with -2
         img[target_row, target_col] = -2 # changes value in place, no need to return
-
+        return img
 
     def autocrop(self, image, lower_threshold=100, upper_threshold=220):
         """Crops any edges within to threshold boundaries (used for crop gray/unkown area)
