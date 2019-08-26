@@ -1,3 +1,0 @@
-<launch>
-  <node pkg = "robotcraft_maze" name = "robot_driver" type = "robot_driver" output = "screen"/>
-</launch>
