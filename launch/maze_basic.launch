@@ -1,12 +1,16 @@
 <!-- maze.launch: launch stage with a maze_solver node -->
 
 <launch>
-  <!-- Run stage node -->
-  <node pkg="stage_ros" type="stageros" name="stageros" args="$(find robotcraft_maze)/world/robotcraft_maze.world" />
+  <!-- Run robot_bringup launch file -->
+  <include file="$(find robotcraft_maze)/launch/robot_bringup.launch"/>
+
+  <!-- Run lidar node -->
+  <include file="$(find ydlidar)/launch/lidar.launch"/>
+
 
     <!-- Run gmapping node -->
-	  <node pkg="gmapping" type="slam_gmapping" name="gmapping">
-  	   <remap from="scan" to="base_scan_0" />
+	  <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
+  	  <!-- <remap from="scan" to="base_scan_0" /> -->
        <!-- Dimensions of scan (values create a square, why?)-->
        <param name="xmin" value="-3.0"/>
        <param name="ymin" value="-6.0"/>
@@ -20,8 +24,8 @@
     </node>
 
     <!-- Run maze_basic node -->
-    <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic" output="screen" />
-    <param name="left" type="bool" value="true" />
+    <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic" output="screen"/>
+    <param name="left" type="bool" value="false" />
     <param name="right" type="bool" value="true" />
 
   <!-- Run map saver node, periodically saves map and robot position backups -->

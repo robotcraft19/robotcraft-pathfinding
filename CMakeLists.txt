@@ -27,3 +27,6 @@ target_link_libraries(maze_basic ${catkin_LIBRARIES})
 
 add_executable(map_saver src/map_saver.cpp)
 target_link_libraries(map_saver ${catkin_LIBRARIES})
+
+add_executable(robot_driver src/robot_driver.cpp)
+target_link_libraries(robot_driver ${catkin_LIBRARIES})

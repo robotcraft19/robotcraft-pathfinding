@@ -1,0 +1,4 @@
+<launch>
+	<include file="$(find robotcraft_maze)/launch/robot_firmware.launch"/>
+	<include file="$(find robotcraft_maze)/launch/robot_driver.launch"/>
+</launch>

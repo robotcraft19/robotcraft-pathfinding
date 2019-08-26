@@ -16,6 +16,7 @@
 #include <ros/console.h>
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/LaserScan.h"
+#include "sensor_msgs/Range.h"
 #include "nav_msgs/Odometry.h"
 #include "std_srvs/Empty.h"
 #include <ctime>
@@ -131,17 +132,17 @@ private:
     }
 
 
-    void frontIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
+    void frontIRCallback(const sensor_msgs::Range& msg){
     	// Extract range, first (and only) element of array
-        this->front_distance = msg->ranges[0];
+        this->front_distance = msg.range;
     }
-    void leftIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
+    void leftIRCallback(const sensor_msgs::Range& msg){
         // Extract range, first (and only) element of array
-    	this->left_distance = msg->ranges[0];
+    	this->left_distance = msg.range;
     }
-    void rightIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
+    void rightIRCallback(const sensor_msgs::Range& msg){
         // Extract range, first (and only) element of array
-    	this->right_distance = msg->ranges[0];
+    	this->right_distance = msg.range;
     }
 
 
@@ -185,7 +186,7 @@ private:
                 ++lost_counter;
 
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
-                if (lost_counter >= 100) {
+                if (lost_counter >= 300) {
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
@@ -198,14 +199,14 @@ private:
         }
         else if (left)
         {
-            // Calculations needed to check if robot is lost
+            // Calculations needed to100 check if robot is lost
             if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE
                 && left_distance > TARGET_DISTANCE)
             {
                 ++lost_counter;
 
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
-                if (lost_counter >= 100) {
+                if (lost_counter >= 300) {
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
@@ -263,7 +264,7 @@ public:
     BasicSolver(){
         // Initialize ROS
         this->n = ros::NodeHandle();
-	srand(time(NULL));
+	      srand(time(NULL));
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
@@ -290,12 +291,12 @@ public:
         ROS_INFO("Left = %d\n", left);
 
         // Setup publishers
-    	this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
+    	  this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
 
         // Setup subscribers
-        this->front_ir_sub = this->n.subscribe("base_scan_1", 10, &BasicSolver::frontIRCallback, this);
-        this->left_ir_sub = this->n.subscribe("base_scan_2", 10, &BasicSolver::leftIRCallback, this);
-        this->right_ir_sub = this->n.subscribe("base_scan_3", 10, &BasicSolver::rightIRCallback, this);
+        this->front_ir_sub = this->n.subscribe("ir_front_sensor", 10, &BasicSolver::frontIRCallback, this);
+        this->left_ir_sub = this->n.subscribe("ir_left_sensor", 10, &BasicSolver::leftIRCallback, this);
+        this->right_ir_sub = this->n.subscribe("ir_right_sensor", 10, &BasicSolver::rightIRCallback, this);
         this->odom_sub = this->n.subscribe("odom", 5, &BasicSolver::odomCallback, this);
 
         // Setup services
@@ -306,6 +307,7 @@ public:
     void run(){
         // Send messages in a loop
         ros::Rate loop_rate(10);
+        this->robot_lost = false;
         while (ros::ok())
         {
         	// Calculate the command to apply
