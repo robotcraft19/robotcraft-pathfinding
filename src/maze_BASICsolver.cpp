@@ -21,7 +21,7 @@
 #include "std_srvs/Empty.h"
 #include <ctime>
 
-#define TARGET_DISTANCE 0.20
+#define TARGET_DISTANCE 0.15
 
 class BasicSolver {
 
@@ -72,18 +72,23 @@ private:
     	// Create message
     	auto msg = geometry_msgs::Twist();
 
-      if(!robot_stop) {
+      if(!this->robot_stop) {
         // Check if robot is lost (after 75 loops without sensing any wall)
         calculateRobotLost();
 
           if (right)
           {
+            if (front_distance < (TARGET_DISTANCE*1.70))
+            {
+              msg.angular.z = 1..25; // maximum angular speed
+              msg.linear.x = 0.08;
               if (front_distance < TARGET_DISTANCE)
               {
                   // Prevent robot from crashing
                   msg.angular.z = 1.25; // maximum angular speed
                   msg.linear.x = -0.04;
               }
+            }
               else if (robot_lost == true)
               {
                   // Robot is lost, go straight to find wall
@@ -100,12 +105,18 @@ private:
 
           else if (left)
           {
-              if (front_distance < TARGET_DISTANCE)
+              if (front_distance < (TARGET_DISTANCE*1.70))
               {
-                  // Prevent robot from crashing
-                  msg.angular.z = -1.25; // maximum angular speed
-                  msg.linear.x = -0.04;
+                msg.angular.z = -1.25; // maximum angular speed
+                msg.linear.x = 0.08;
+                if (front_distance < TARGET_DISTANCE)
+                {
+                    // Prevent robot from crashing
+                    msg.angular.z = -1.25; // maximum angular speed
+                    msg.linear.x = -0.04;
+                }
               }
+
               else if (robot_lost == true)
               {
                   // Robot is lost, go straight to find wall
@@ -164,12 +175,12 @@ private:
         // Restrict gain to prevent overshooting on sharp corners
         if(left)
             gain = -gain;
-            if(gain > 0.4)
-                gain = 0.4;
+            if(gain > 0.6)
+                gain = 0.6;
 
 
 	    if(right)
-            if(gain < -0.4) gain = -0.4;
+            if(gain < -0.6) gain = -0.6;
 
 
 	    return gain;
@@ -188,7 +199,7 @@ private:
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
                 if (lost_counter >= 300) {
                     robot_lost = true;
-                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
+                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
             else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE)
@@ -208,7 +219,7 @@ private:
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
                 if (lost_counter >= 300) {
                     robot_lost = true;
-                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
+                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
             else if(front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE)
@@ -224,7 +235,7 @@ private:
            std_srvs::Empty::Response &res)
   {
     ROS_INFO("Request to stop robot and save map and position received...");
-    robot_stop = !robot_stop;
+    this->robot_stop = true;
     saveMap();
     saveRobotPose();
     return true;
@@ -302,12 +313,14 @@ public:
         // Setup services
         this->basic_serv = n.advertiseService("stop_save", &BasicSolver::basicServiceCallback, this);
 
+        // Set robot to lost initially
+        this->robot_lost = true;
+
     }
 
     void run(){
         // Send messages in a loop
         ros::Rate loop_rate(10);
-        this->robot_lost = false;
         while (ros::ok())
         {
         	// Calculate the command to apply
