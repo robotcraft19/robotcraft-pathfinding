@@ -21,8 +21,8 @@ class Cell:
         self.column = column
 
     def pose(self):
-        # TODO: Pose is in center of cel, except for start node
-        return Pose(self.column * Cell.resolution + Cell.resolution/2, -self.row * Cell.resolution + Cell.resolution/2, 0)
+        # TODO: Set Pose to center of cell instead of top-left corner?
+        return Pose(self.column * Cell.resolution, -self.row * Cell.resolution, 0)
 
 class ProSolver:
     def __init__(self):
