@@ -1,0 +1,15 @@
+<launch>
+  <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
+    <!-- <remap from="scan" to="base_scan_0" /> -->
+     <!-- Dimensions of scan (values create a square, why?)-->
+     <param name="xmin" value="-5.0"/>
+     <param name="ymin" value="-5.0"/>
+     <param name="xmax" value="5.0"/>
+     <param name="ymax" value="5.0"/>
+     <!-- Resolution of scan (m/pixel) -->
+     <param name="delta" value="0.10"/>
+     <!-- Make scans with no obstacle appear as free instead of unkown
+     <param name="maxUrange" value="2.95"/>
+     <param name="maxRange" value="3.0"/> -->
+  </node>
+</launch>

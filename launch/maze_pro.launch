@@ -1,18 +1,27 @@
 <!-- maze.launch: launch stage with a maze_solver node -->
 
 <launch>
-  <!-- Run stage node -->
-  <node pkg="stage_ros" type="stageros" name="stageros" args="$(find robotcraft_maze)/world/robotcraft_maze.world" />
+  <!-- Run robot_bringup launch file -->
+  <include file="$(find robotcraft_maze)/launch/robot_bringup.launch"/>
+
+  <!-- Run lidar node -->
+  <include file="$(find ydlidar)/launch/lidar.launch"/>
+
   <!-- Run map server node -->
   <node pkg="map_server" type="map_server" name="map_server" args="$(find robotcraft_maze)/scans/map.yaml"/>
+
+  <!-- Run amcl node
+  <include file=$(find robotcraft_maze)/launch/amcl.launch />
+   -->
+
   <!-- Run maze_pro node -->
   <node pkg="robotcraft_maze" type="maze_PROsolver.py" name="maze_pro" output="screen">
-      <rosparam param="position">
-          startX: 0.05
-          startY: -0.40
-          targetX: 1.20
-          targetY: -5.20
-      </rosparam>
+      <!--<rosparam param="position">
+          startX: 0.00
+          startY: -0.30
+          targetX: 4.15
+          targetY: -0.30
+      </rosparam> -->
   </node>
 
 </launch>
