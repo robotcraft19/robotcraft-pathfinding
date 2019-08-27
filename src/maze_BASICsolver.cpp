@@ -1,20 +1,23 @@
 /**
  * @file maze_BASICsolver.cpp
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2019-08-22
- * 
+ *
  * @copyright Copyright (c) 2019
- * 
+ *
  */
 
 #include <iostream>
+#include <fstream>
+#include <string>
 #include "ros/ros.h"
 #include <ros/console.h>
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/LaserScan.h"
-#include <string>
+#include "nav_msgs/Odometry.h"
+#include "std_srvs/Empty.h"
 #include <ctime>
 
 #define TARGET_DISTANCE 0.20
@@ -33,6 +36,10 @@ private:
     ros::Subscriber front_ir_sub;
     ros::Subscriber left_ir_sub;
     ros::Subscriber right_ir_sub;
+    ros::Subscriber odom_sub;
+
+    // Services
+    ros::ServiceServer  basic_serv;
 
     // External Parameters
     bool left;
@@ -46,7 +53,7 @@ private:
     // PID control
     float old_prop_error;
     float integral_error;
-    
+
     float KP = 10;
     float KI = 0.0;
     float KD = 0.0;
@@ -55,81 +62,104 @@ private:
     // Helper variables
     bool robot_lost;
     int lost_counter;
+    bool robot_stop;
+    float robot_x, robot_y;
 
 
 
     geometry_msgs::Twist calculateCommand(){
-    
-    // Check if robot is lost (after 75 loops without sensing any wall)
-    calculateRobotLost();
+    	// Create message
+    	auto msg = geometry_msgs::Twist();
 
-	// Create message
-	auto msg = geometry_msgs::Twist();
-    if (right) 
-    {
-        if (front_distance < TARGET_DISTANCE)
+        if(!robot_stop) 
         {
-            // Prevent robot from crashing
-            msg.angular.z = 1.25; // maximum angular speed
-            msg.linear.x = -0.04;
-        }
-        else if (robot_lost == true)
-        {
-            // Robot is lost, go straight to find wall
-            msg.linear.x = 0.08;
-        } 
-        else
-        {
-            // Robot keeps using normal PID controller
-            float gain = calculateGain(right_distance);
-            msg.linear.x = 0.08;
-            msg.angular.z = gain;
-        }
+            // Check if robot is lost (after 75 loops without sensing any wall)
+            calculateRobotLost();
+
+            if (right)
+            {
+                if (front_distance < (TARGET_DISTANCE + 0.25))
+                {
+                    // Slow down and start turning left
+                    msg.angular.z = 0.6125;
+                    msg.linear.x = 0.08;
+                    if (front_distance < TARGET_DISTANCE)
+                    {
+                        // Prevent robot from crashing
+                        msg.angular.z = 1.25; // maximum angular speed
+                        msg.linear.x = -0.04;
+                    }
+                }
+                
+                else if (robot_lost == true)
+                {
+                    // Robot is lost, go straight to find wall
+                    msg.linear.x = 0.08;
+                }
+                else
+                {
+                    // Robot keeps using normal PID controller
+                    float gain = calculateGain(right_distance);
+                    msg.linear.x = 0.08;
+                    msg.angular.z = gain;
+                }
+            }
+
+            else if (left)
+            {
+                if (front_distance < (TARGET_DISTANCE + 0.25))
+                {
+                    msg.angular.z = -0.6125;
+                    msg.linear.x = 0.08;
+                    if (front_distance < TARGET_DISTANCE)
+                    {
+                        // Prevent robot from crashing
+                        msg.angular.z = -1.25; // maximum angular speed
+                        msg.linear.x = -0.04;
+                    }
+                }
+                else if (robot_lost == true)
+                {
+                    // Robot is lost, go straight to find wall
+                    msg.linear.x = 0.08;
+                }
+                else
+                {
+                    // Robot keeps using normal PID controller
+                    float gain = calculateGain(left_distance);
+                    msg.linear.x = 0.08;
+                    msg.angular.z = gain;
+                }
+            }
+      }
+
+      else {
+        // Stop robot (set velocities to 0)
+        msg.linear.x = 0.0;
+        msg.angular.z = 0.0;
+      }
+
+    	return msg;
+
     }
 
-    else if (left) 
-    {
-        if (front_distance < TARGET_DISTANCE)
-        {
-            // Prevent robot from crashing
-            msg.angular.z = -1.25; // maximum angular speed
-            msg.linear.x = -0.04;
-        }
-        else if (robot_lost == true)
-        {
-            // Robot is lost, go straight to find wall
-            msg.linear.x = 0.08;
-        } 
-        else
-        {
-            // Robot keeps using normal PID controller
-            float gain = calculateGain(left_distance);
-            msg.linear.x = 0.08;
-            msg.angular.z = gain;
-        }
-    }
-
-	return msg;
-
-    }
-    
 
     void frontIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     	// Extract range, first (and only) element of array
-        this->front_distance = msg->ranges[0]; 
+        this->front_distance = msg->ranges[0];
     }
     void leftIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
         // Extract range, first (and only) element of array
-    	this->left_distance = msg->ranges[0]; 
+    	this->left_distance = msg->ranges[0];
     }
     void rightIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
         // Extract range, first (and only) element of array
-    	this->right_distance = msg->ranges[0]; 
+    	this->right_distance = msg->ranges[0];
     }
 
 
-    float calculateGain(float value) 
-	{	
+    float calculateGain(float value)
+	{
         // Calculate errors
 	    float error = TARGET_DISTANCE - value;
 	    float new_der_err = error - this->old_prop_error;
@@ -141,15 +171,15 @@ private:
 
         // Update old errors
 	    this->old_prop_error = error;
-	    this->integral_error = new_int_err;  
-	    
+	    this->integral_error = new_int_err;
+
         // Restrict gain to prevent overshooting on sharp corners
         if(left)
             gain = -gain;
             if(gain > 0.4)
                 gain = 0.4;
 
-            
+
 	    if(right)
             if(gain < -0.4) gain = -0.4;
 
@@ -157,13 +187,13 @@ private:
 	    return gain;
 	}
 
-	void calculateRobotLost() 
+	void calculateRobotLost()
 	{
         if (right)
         {
             // Calculations needed to check if robot is lost
-            if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE 
-                && left_distance > TARGET_DISTANCE) 
+            if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE
+                && left_distance > TARGET_DISTANCE)
             {
                 ++lost_counter;
 
@@ -172,8 +202,8 @@ private:
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
-            } 
-            else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE) 
+            }
+            else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE)
             {
                 robot_lost = false;
                 lost_counter = 0;
@@ -182,8 +212,8 @@ private:
         else if (left)
         {
             // Calculations needed to check if robot is lost
-            if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE 
-                && left_distance > TARGET_DISTANCE) 
+            if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE
+                && left_distance > TARGET_DISTANCE)
             {
                 ++lost_counter;
 
@@ -192,8 +222,8 @@ private:
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
-            } 
-            else if(front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE) 
+            }
+            else if(front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE)
             {
                 robot_lost = false;
                 lost_counter = 0;
@@ -202,28 +232,63 @@ private:
         }
 	}
 
+  bool basicServiceCallback(std_srvs::Empty::Request  &req,
+           std_srvs::Empty::Response &res)
+  {
+    ROS_INFO("Request to stop robot and save map and position received...");
+    robot_stop = !robot_stop;
+    saveMap();
+    saveRobotPose();
+    return true;
+  }
+
+  void saveMap() {
+    /* Runs map_saver node in map_server package to save
+    *  occupancy grid from /map topic as image */
+
+    // Save as map.pgm
+    system("cd ~/catkin_ws/src/robotcraft_maze/scans && rosrun map_server map_saver -f map");
+  }
+
+  void saveRobotPose() {
+    /* Saves the robot's latest pose which can be used
+    *  for target position calculation */
+    const char* homeDir = getenv("HOME");
+    std::string file(homeDir);
+    file.append("/catkin_ws/src/robotcraft_maze/scans/robot_position.txt");
+
+    std::ofstream position_file;
+    position_file.open (file);
+    position_file << this->robot_x << "\n" << this->robot_y << "\n";
+    position_file.close();
+
+  }
+
+  void odomCallback(const nav_msgs::Odometry::ConstPtr &msg)
+	{
+    this->robot_x = msg->pose.pose.position.x;
+    this->robot_y = msg->pose.pose.position.y;
+	}
+
 
 public:
 
     BasicSolver(){
         // Initialize ROS
         this->n = ros::NodeHandle();
-        srand(time(NULL));
+	srand(time(NULL));
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
 
-        ROS_INFO("Right = %d\n", this->right);
-        ROS_INFO("Left = %d\n", this->left);
         int rnd = rand() % 100;
 
-        if (left && right) 
+        if (left && right)
         {
             if (rnd > 50)
                 left = false;
             else
                 right = false;
-            ROS_INFO("rand = %d\n", rnd);
         }
 
         if (!left && !right)
@@ -232,7 +297,6 @@ public:
                 left = true;
             else
                 right = true;
-            ROS_INFO("rand = %d\n", rnd);
         }
 
         ROS_INFO("Right = %d\n", right);
@@ -245,6 +309,11 @@ public:
         this->front_ir_sub = this->n.subscribe("base_scan_1", 10, &BasicSolver::frontIRCallback, this);
         this->left_ir_sub = this->n.subscribe("base_scan_2", 10, &BasicSolver::leftIRCallback, this);
         this->right_ir_sub = this->n.subscribe("base_scan_3", 10, &BasicSolver::rightIRCallback, this);
+        this->odom_sub = this->n.subscribe("odom", 5, &BasicSolver::odomCallback, this);
+
+        // Setup services
+        this->basic_serv = n.advertiseService("stop_save", &BasicSolver::basicServiceCallback, this);
+
     }
 
     void run(){
@@ -274,6 +343,7 @@ int main(int argc, char **argv){
 
     // Create our controller object and run it
     auto controller = BasicSolver();
+    sleep(3);
     controller.run();
 
     // And make good on our promise
