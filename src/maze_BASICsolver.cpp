@@ -16,11 +16,12 @@
 #include <ros/console.h>
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/LaserScan.h"
+#include "sensor_msgs/Range.h"
 #include "nav_msgs/Odometry.h"
 #include "std_srvs/Empty.h"
 #include <ctime>
 
-#define TARGET_DISTANCE 0.20
+#define TARGET_DISTANCE 0.15
 
 class BasicSolver {
 
@@ -69,28 +70,24 @@ private:
 
     geometry_msgs::Twist calculateCommand(){
     	// Create message
-    	auto msg = geometry_msgs::Twist();
-
-        if(!robot_stop) 
-        {
+        auto msg = geometry_msgs::Twist();
+        if(!this->robot_stop) {
             // Check if robot is lost (after 75 loops without sensing any wall)
             calculateRobotLost();
 
             if (right)
             {
-                if (front_distance < (TARGET_DISTANCE + 0.25))
+                if (front_distance < (TARGET_DISTANCE*1.70))
                 {
-                    // Slow down and start turning left
-                    msg.angular.z = 0.6125;
-                    msg.linear.x = 0.08;
-                    if (front_distance < TARGET_DISTANCE)
-                    {
-                        // Prevent robot from crashing
-                        msg.angular.z = 1.25; // maximum angular speed
-                        msg.linear.x = -0.04;
-                    }
+                msg.angular.z = 1..25; // maximum angular speed
+                msg.linear.x = 0.08;
+                if (front_distance < TARGET_DISTANCE)
+                {
+                    // Prevent robot from crashing
+                    msg.angular.z = 1.25; // maximum angular speed
+                    msg.linear.x = -0.04;
                 }
-                
+                }
                 else if (robot_lost == true)
                 {
                     // Robot is lost, go straight to find wall
@@ -107,9 +104,9 @@ private:
 
             else if (left)
             {
-                if (front_distance < (TARGET_DISTANCE + 0.25))
+                if (front_distance < (TARGET_DISTANCE*1.70))
                 {
-                    msg.angular.z = -0.6125;
+                    msg.angular.z = -1.25; // maximum angular speed
                     msg.linear.x = 0.08;
                     if (front_distance < TARGET_DISTANCE)
                     {
@@ -118,6 +115,7 @@ private:
                         msg.linear.x = -0.04;
                     }
                 }
+
                 else if (robot_lost == true)
                 {
                     // Robot is lost, go straight to find wall
@@ -144,17 +142,17 @@ private:
     }
 
 
-    void frontIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
+    void frontIRCallback(const sensor_msgs::Range& msg){
     	// Extract range, first (and only) element of array
-        this->front_distance = msg->ranges[0];
+        this->front_distance = msg.range;
     }
-    void leftIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
+    void leftIRCallback(const sensor_msgs::Range& msg){
         // Extract range, first (and only) element of array
-    	this->left_distance = msg->ranges[0];
+    	this->left_distance = msg.range;
     }
-    void rightIRCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
+    void rightIRCallback(const sensor_msgs::Range& msg){
         // Extract range, first (and only) element of array
-    	this->right_distance = msg->ranges[0];
+    	this->right_distance = msg.range;
     }
 
 
@@ -176,12 +174,11 @@ private:
         // Restrict gain to prevent overshooting on sharp corners
         if(left)
             gain = -gain;
-            if(gain > 0.4)
-                gain = 0.4;
-
+            if(gain > 0.6)
+                gain = 0.6;
 
 	    if(right)
-            if(gain < -0.4) gain = -0.4;
+            if(gain < -0.6) gain = -0.6;
 
 
 	    return gain;
@@ -198,9 +195,9 @@ private:
                 ++lost_counter;
 
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
-                if (lost_counter >= 100) {
+                if (lost_counter >= 300) {
                     robot_lost = true;
-                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
+                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
             else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE)
@@ -218,9 +215,9 @@ private:
                 ++lost_counter;
 
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
-                if (lost_counter >= 100) {
+                if (lost_counter >= 300) {
                     robot_lost = true;
-                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
+                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
             else if(front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE)
@@ -236,7 +233,8 @@ private:
            std_srvs::Empty::Response &res)
   {
     ROS_INFO("Request to stop robot and save map and position received...");
-    robot_stop = !robot_stop;
+
+    this->robot_stop = true;
     saveMap();
     saveRobotPose();
     return true;
@@ -276,7 +274,7 @@ public:
     BasicSolver(){
         // Initialize ROS
         this->n = ros::NodeHandle();
-	srand(time(NULL));
+	    srand(time(NULL));
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
@@ -303,16 +301,20 @@ public:
         ROS_INFO("Left = %d\n", left);
 
         // Setup publishers
-    	this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
+    	  this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
 
         // Setup subscribers
-        this->front_ir_sub = this->n.subscribe("base_scan_1", 10, &BasicSolver::frontIRCallback, this);
-        this->left_ir_sub = this->n.subscribe("base_scan_2", 10, &BasicSolver::leftIRCallback, this);
-        this->right_ir_sub = this->n.subscribe("base_scan_3", 10, &BasicSolver::rightIRCallback, this);
+        this->front_ir_sub = this->n.subscribe("ir_front_sensor", 10, &BasicSolver::frontIRCallback, this);
+        this->left_ir_sub = this->n.subscribe("ir_left_sensor", 10, &BasicSolver::leftIRCallback, this);
+        this->right_ir_sub = this->n.subscribe("ir_right_sensor", 10, &BasicSolver::rightIRCallback, this);
+
         this->odom_sub = this->n.subscribe("odom", 5, &BasicSolver::odomCallback, this);
 
         // Setup services
         this->basic_serv = n.advertiseService("stop_save", &BasicSolver::basicServiceCallback, this);
+
+        // Set robot to lost initially
+        this->robot_lost = true;
 
     }
 
@@ -343,7 +345,7 @@ int main(int argc, char **argv){
 
     // Create our controller object and run it
     auto controller = BasicSolver();
-    sleep(3);
+    sleep(5);
     controller.run();
 
     // And make good on our promise
