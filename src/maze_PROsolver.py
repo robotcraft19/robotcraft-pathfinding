@@ -3,6 +3,7 @@ import rospy
 from map_loader import MapLoader
 from path_finder import PathFinder
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
 from math import atan2, pi
@@ -20,7 +21,8 @@ class Cell:
         self.column = column
 
     def pose(self):
-        return Pose(self.column * Cell.resolution, -self.row * Cell.resolution, 0)
+        # TODO: Pose is in center of cel, except for start node
+        return Pose(self.column * Cell.resolution + Cell.resolution/2, -self.row * Cell.resolution + Cell.resolution/2, 0)
 
 class ProSolver:
     def __init__(self):
@@ -44,16 +46,16 @@ class ProSolver:
         # Calculate path
         self.path_finder = PathFinder(self.map_matrix)
         raw_path = self.path_finder.calculate_path()
-        self.path = [Cell(r-self.path_finder.robot.row, c- self.path_finder.robot.column) for r,c in raw_path] # move rows to correct starting position
+        self.path = [Cell(r-self.path_finder.start.row, c- self.path_finder.start.column) for r,c in raw_path] # move rows to correct starting position
         self.goal = self.path[0].pose()
         self.path_index = 0
         self.pose = Pose(0, 0, 0)
 
         # Setup publishers
-        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 5)
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 10)
 
         # Setup subscribers
-        odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
+        #odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
 
     def odom_callback(self, msg):
         self.pose.x = msg.pose.pose.position.x
@@ -87,7 +89,7 @@ class ProSolver:
                 speed.angular.z = 0.0
                 self.next_pose()
 
-            elif abs(angle_to_goal - self.pose.theta) > 0.02:
+            elif abs(angle_to_goal - self.pose.theta) > 0.1: # increase tolerance?
                 speed.linear.x = 0.0
                 if (self.pose.theta < angle_to_goal):
                     if (self.pose.theta < -0.2 and angle_to_goal > 0):
