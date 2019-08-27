@@ -6,6 +6,8 @@ complex_a = True
 
 class Node:
     target = None
+    directions = None
+    matrix = None
 
     def __init__(self, row, column, g, parent):
         self.row = row
@@ -13,7 +15,7 @@ class Node:
         self.parent = parent
         self.g = g # total cost so far
         self.h = self.calculate_heuristic() # estimated cost from node to goal
-        self.f = self.g + self.h # total estimated cost of path through node
+        self.f = self.g + self.h + self.wall_penalty()# total estimated cost of path through node
 
     def calculate_heuristic(self):
         if Node.target == None:
@@ -26,6 +28,18 @@ class Node:
         else:
             # return euclidian distance
             return ((self.row - Node.target.row)**2 + (self.column - Node.target.column)**2)**0.5
+
+    def wall_penalty(self):
+        wall_penalty = 0
+        for dir in Node.directions:
+            try:
+                if Node.matrix[self.row + dir[0]][self.column + dir[1]] == 1:
+                    wall_penalty += 5.0
+            except:
+                # out of bounds
+                pass
+
+        return wall_penalty
 
     def __lt__(self, other):
         # comparison method for sorting priority
@@ -48,6 +62,9 @@ class PathFinder:
 
     def __init__(self, matrix):
         self.matrix = np.array(matrix)
+        Node.matrix = self.matrix
+        # Initialize matrix with possible movements and their cost
+        self.directions = self.initialize_directions()
 
         # Get matrix coorinates of target position
         result = np.where(self.matrix == -2)
@@ -64,8 +81,6 @@ class PathFinder:
         self.open_nodes = [self.start]
         # Initialize empty closed nodes queue
         self.closed_nodes = []
-        # Initialize matrix with possible movements and their cost
-        self.directions = self.initialize_directions()
 
         # Start A* algorithm to calculate paths
         self.calculate_path()
@@ -92,7 +107,7 @@ class PathFinder:
                 # Filter nodes that are occupied
                 tmp_neighbors = [nb for nb in neighbors if self.matrix[nb.row][nb.column] != 1]
                 # Filter nodes that are right next to wall (skip if current_node = start)
-                if not current_node == self.start:
+                """if not current_node == self.start:
                     neighbors = []
                     for nb in tmp_neighbors:
                         if nb == self.target:
@@ -111,8 +126,8 @@ class PathFinder:
 
                         if ok_flag == True:
                             neighbors.append(nb)
-                else:
-                    neighbors = tmp_neighbors
+                else:"""
+                neighbors = tmp_neighbors
 
                 for neighbor_node in neighbors:
                     # Check if neighbor_node is in open nodes list
@@ -186,4 +201,5 @@ class PathFinder:
                 [-1, 0, 1],
                 [0, -1, 1]
             ]
+        Node.directions = directions
         return directions
