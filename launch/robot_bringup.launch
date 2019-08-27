@@ -1,0 +1,10 @@
+<launch>
+		<!-- Connect Arduino and Raspberry using rosserial node -->
+		<node pkg="rosserial_python" type="serial_node.py" name="serial_node" output="screen">
+				<param name="port" value="/dev/arduino_mega"/>
+				<param name="baud" value="76800"/>
+		</node>
+
+		<!-- Run robot_driver node to handle communication between Arduino and ROS topics -->
+		<node pkg = "robotcraft_maze" name = "robot_driver" type = "robot_driver" output = "screen"/>
+</launch>
