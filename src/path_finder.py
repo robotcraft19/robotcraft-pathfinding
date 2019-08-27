@@ -153,7 +153,7 @@ class PathFinder:
                 map[point[0], point[1]] = 7
             for row in map:
                 for col in row:
-                    f.write(str(col))
+                    f.write(str(int(col)))
                     if print_output == True:
                         print(col, end = '')
                 f.write('\n')
