@@ -39,7 +39,7 @@ private:
 		*  for target position calculation */
 		const char* homeDir = getenv("HOME");
 		std::string file(homeDir);
-		file.append("/catkin_ws/src/robotcraft_maze/scans/robot_position.txt");
+		file.append("/catkin_ws/src/robotcraft_maze/scans/rob_pos_backup.txt");
 
 		std::ofstream position_file;
 		position_file.open (file);
@@ -78,7 +78,7 @@ public:
 	        	saveMap();
 						saveRobotPose();
 						ROS_WARN_STREAM("Saving image of map as map_backup.pgm"
-						<< " and saving robot's pose as robot_position.txt"
+						<< " and saving robot's pose as rob_pos_backup.txt"
 					 	<< " in ~/catkin_ws/src/robotcraft_maze/scans");
 	        	}
 
