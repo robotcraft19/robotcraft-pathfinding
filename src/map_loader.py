@@ -69,6 +69,8 @@ class MapLoader:
         origin_x = self.occupancy_grid.info.origin.position.x
         origin_y = self.occupancy_grid.info.origin.position.y
         resolution = self.occupancy_grid.info.resolution
+        height = self.occupancy_grid.info.height
+        width = self.occupancy_grid.info.width
 
         if not self.start:
             # Place robot at origin of map
@@ -80,7 +82,7 @@ class MapLoader:
                 column = int(round((abs(origin_x) / resolution))) - n_cols_removed_left
             else:
                 # Calculate row and column of cell
-                row = (img.shape[1]-1) - int(round((abs(origin_y) / resolution))) # flipped coordinate system on y-axis
+                row = (height-1) - int(round((abs(origin_y) / resolution))) # flipped coordinate system on y-axis
                 column = int(round((abs(origin_x) / resolution)))
         else:
             print("Placed robot from launch file")
