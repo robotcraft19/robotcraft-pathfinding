@@ -15,7 +15,7 @@ class Node:
         self.parent = parent
         self.g = g # total cost so far
         self.h = self.calculate_heuristic() # estimated cost from node to goal
-        self.f = self.g + self.h + self.wall_penalty()# total estimated cost of path through node
+        self.f = self.g + self.h + self.calculate_wall_bias()# total estimated cost of path through node
 
     def calculate_heuristic(self):
         if Node.target == None:
@@ -29,7 +29,7 @@ class Node:
             # return euclidian distance
             return ((self.row - Node.target.row)**2 + (self.column - Node.target.column)**2)**0.5
 
-    def wall_penalty(self):
+    def calculate_wall_bias(self):
         wall_penalty = 0
         for dir in Node.directions:
             try:
@@ -105,29 +105,7 @@ class PathFinder:
                     if 0 <= nb.row < self.matrix.shape[0]
                         and 0 <= nb.column < self.matrix.shape[1]]
                 # Filter nodes that are occupied
-                tmp_neighbors = [nb for nb in neighbors if self.matrix[nb.row][nb.column] != 1]
-                # Filter nodes that are right next to wall (skip if current_node = start)
-                """if not current_node == self.start:
-                    neighbors = []
-                    for nb in tmp_neighbors:
-                        if nb == self.target:
-                            neighbors.append(nb)
-                            continue
-
-                        ok_flag = True
-                        for dir in self.directions:
-                            try:
-                                if self.matrix[nb.row + dir[0]][nb.column + dir[1]] == 1:
-                                    ok_flag = False
-                                    break
-                            except:
-                                # out of bounds
-                                pass
-
-                        if ok_flag == True:
-                            neighbors.append(nb)
-                else:"""
-                neighbors = tmp_neighbors
+                neighbors = [nb for nb in neighbors if self.matrix[nb.row][nb.column] != 1]
 
                 for neighbor_node in neighbors:
                     # Check if neighbor_node is in open nodes list
