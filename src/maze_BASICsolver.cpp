@@ -80,7 +80,7 @@ private:
           {
             if (front_distance < (TARGET_DISTANCE*1.70))
             {
-              msg.angular.z = 1..25; // maximum angular speed
+              msg.angular.z = 1.25; // maximum angular speed
               msg.linear.x = 0.08;
               if (front_distance < TARGET_DISTANCE)
               {
