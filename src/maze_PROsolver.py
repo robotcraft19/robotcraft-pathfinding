@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+import time
 from map_loader import MapLoader
 from path_finder import PathFinder
 from nav_msgs.msg import Odometry
@@ -55,8 +56,8 @@ class ProSolver:
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 10)
 
         # Setup subscribers
-        odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
-        #odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
+        #odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
+        odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
 
     def odom_callback(self, msg):
         self.pose.x = msg.pose.pose.position.x
@@ -90,24 +91,24 @@ class ProSolver:
                 speed.angular.z = 0.0
                 self.next_pose()
 
-            elif abs(angle_to_goal - self.pose.theta) > 0.1: # increase tolerance?
+            elif abs(angle_to_goal - self.pose.theta) > 0.25: # increase tolerance?
                 speed.linear.x = 0.0
                 if (self.pose.theta < angle_to_goal):
                     if (self.pose.theta < -0.2 and angle_to_goal > 0):
                         if (abs(self.pose.theta > (pi/2)) and abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = 0.3
+                            speed.angular.z = 0.6125
                         else:
-                            speed.angular.z = -0.3
+                            speed.angular.z = -0.6125
                     else:
-                        speed.angular.z = 0.3
+                        speed.angular.z = 0.6125
                 elif (self.pose.theta > angle_to_goal):
                     if (angle_to_goal < -0.2 and self.pose.theta > 0):
                         if (abs(self.pose.theta > (pi/2)) or abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = 0.3
+                            speed.angular.z = 0.6125
                         else:
-                            speed.angular.z = -0.3
+                            speed.angular.z = -0.6125
                     else:
-                        speed.angular.z = -0.3
+                        speed.angular.z = -0.6125
             else:
                 speed.linear.x = 0.08
                 speed.angular.z = 0.0
@@ -120,6 +121,7 @@ class ProSolver:
 if __name__ == '__main__':
     try:
         controller = ProSolver()
+        time.sleep(10);
         controller.run()
 
     except rospy.ROSInterruptException:
