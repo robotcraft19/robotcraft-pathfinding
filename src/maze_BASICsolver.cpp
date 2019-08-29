@@ -175,12 +175,12 @@ private:
         // Restrict gain to prevent overshooting on sharp corners
         if(left)
             gain = -gain;
-            if(gain > 0.6)
-                gain = 0.6;
+            if(gain > 0.5)
+                gain = 0.5;
 
 
 	    if(right)
-            if(gain < -0.6) gain = -0.6;
+            if(gain < -0.5) gain = -0.5;
 
 
 	    return gain;
@@ -305,9 +305,9 @@ public:
     	  this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
 
         // Setup subscribers
-        this->front_ir_sub = this->n.subscribe("ir_front_sensor", 10, &BasicSolver::frontIRCallback, this);
-        this->left_ir_sub = this->n.subscribe("ir_left_sensor", 10, &BasicSolver::leftIRCallback, this);
-        this->right_ir_sub = this->n.subscribe("ir_right_sensor", 10, &BasicSolver::rightIRCallback, this);
+        this->front_ir_sub = this->n.subscribe("ir_front_sensor", 5, &BasicSolver::frontIRCallback, this);
+        this->left_ir_sub = this->n.subscribe("ir_left_sensor", 5, &BasicSolver::leftIRCallback, this);
+        this->right_ir_sub = this->n.subscribe("ir_right_sensor", 5, &BasicSolver::rightIRCallback, this);
         this->odom_sub = this->n.subscribe("odom", 5, &BasicSolver::odomCallback, this);
 
         // Setup services
@@ -320,7 +320,7 @@ public:
 
     void run(){
         // Send messages in a loop
-        ros::Rate loop_rate(10);
+        ros::Rate loop_rate(8); // Prevent lost sync error
         while (ros::ok())
         {
         	// Calculate the command to apply
@@ -345,7 +345,7 @@ int main(int argc, char **argv){
 
     // Create our controller object and run it
     auto controller = BasicSolver();
-    sleep(5);
+    sleep(15); // give LIDAR time to start spinning
     controller.run();
 
     // And make good on our promise
