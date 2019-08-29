@@ -8,6 +8,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
 from math import atan2, pi
+import itertools
 
 class Pose:
     def __init__(self, x, y, theta):
@@ -16,16 +17,38 @@ class Pose:
         self.theta = theta
 
 class Cell:
-    resolution = 0.2
+    resolution = None
+    start = None
+
     def __init__(self, row, column):
         self.row = row
         self.column = column
+        self.rel_row = self.row - Cell.start.row
+        self.rel_column = self.column - Cell.start.column
 
     def pose(self):
-        # TODO: Set Pose to center of cell instead of top-left corner?
-        return Pose(self.column * Cell.resolution, -self.row * Cell.resolution, 0)
+        # Check if cell has any walls as neighbours
+        neighbors_matrix = ProSolver.matrix[self.row-1:self.row+2, self.column-1:self.column+2]
+        diff_x = 0
+        diff_y = 0
+
+        if 1 in neighbors_matrix: # check if any walls at all
+            if 1 in neighbors_matrix[0, :]:
+                diff_y -= Cell.resolution/2 # move downwards if any wall in top row
+            if 1 in neighbors_matrix[2, :]:
+                diff_y += Cell.resolution/2 # move upwards if any wall in bottom row
+            if 1 in neighbors_matrix[:, 0]:
+                diff_x += Cell.resolution/2 # move to the right if any wall in left column
+            if 1 in neighbors_matrix[:, 2]:
+                diff_x -= Cell.resolution/2 # move to the left if any wall in right column
+            rospy.logwarn("Path passing close to wall, using diff matrix: [%s, %s]", diff_x, diff_y)
+
+        # Set default Pose to center of cell instead of top-left corner and add calculated diffs
+        return Pose((self.rel_column * Cell.resolution) + Cell.resolution/2 + diff_x, \
+                (-self.rel_row * Cell.resolution) - Cell.resolution/2+diff_y, 0)
 
 class ProSolver:
+    matrix = None
     def __init__(self):
         rospy.init_node('maze_pro_solver', anonymous=True)
 
@@ -42,12 +65,14 @@ class ProSolver:
         # Load maze matrix
         self.map_loader = MapLoader(start, target) # do not crop if target outside of maze
         self.map_matrix = self.map_loader.loadMap()
+        ProSolver.matrix = self.map_matrix
         Cell.resolution = self.map_loader.occupancy_grid.info.resolution
 
         # Calculate path
         self.path_finder = PathFinder(self.map_matrix)
         raw_path = self.path_finder.calculate_path()
-        self.path = [Cell(r-self.path_finder.start.row, c- self.path_finder.start.column) for r,c in raw_path] # move rows to correct starting position
+        Cell.start = self.path_finder.start
+        self.path = [Cell(r, c) for r,c in raw_path]
         self.goal = self.path[0].pose()
         self.path_index = 0
         self.pose = Pose(0, 0, 0)
@@ -70,6 +95,7 @@ class ProSolver:
         try:
             self.path_index += 1
             self.goal = self.path[self.path_index].pose()
+            rospy.loginfo("Moving to next pose: [%s, %s]", self.goal.x, self.goal.y)
         except IndexError:
             rospy.logwarn("REACHED END OF PATH!")
 
@@ -91,7 +117,7 @@ class ProSolver:
                 speed.angular.z = 0.0
                 self.next_pose()
 
-            elif abs(angle_to_goal - self.pose.theta) > 0.25: # increase tolerance?
+            elif abs(angle_to_goal - self.pose.theta) > 0.2: # increase tolerance?
                 speed.linear.x = 0.0
                 if (self.pose.theta < angle_to_goal):
                     if (self.pose.theta < -0.2 and angle_to_goal > 0):
