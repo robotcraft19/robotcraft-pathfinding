@@ -30,7 +30,7 @@
 
           <!-- TODO: Adjust update values -->
           <param name="update_min_d" value="0.05"/>
-          <param name="update_min_a" value="0.08"/> <!-- TODO: Tune values -->
+          <param name="update_min_a" value="0.05"/> <!-- TODO: Tune values -->
           <param name="odom_frame_id" value="odom"/>
           <param name="resample_interval" value="1"/>
           <param name="transform_tolerance" value="0.1"/>
