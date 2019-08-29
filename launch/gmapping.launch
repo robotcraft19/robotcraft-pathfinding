@@ -8,8 +8,8 @@
      <param name="ymax" value="5.0"/>
      <!-- Resolution of scan (m/pixel) -->
      <param name="delta" value="0.10"/>
-     <!-- Make scans with no obstacle appear as free instead of unkown
+     <!-- Make scans with no obstacle appear as free instead of unkown -->
      <param name="maxUrange" value="2.95"/>
-     <param name="maxRange" value="3.0"/> -->
+     <param name="maxRange" value="3.0"/>
   </node>
 </launch>
