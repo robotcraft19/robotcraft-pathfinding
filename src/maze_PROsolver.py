@@ -105,7 +105,7 @@ class ProSolver:
 
         while not rospy.is_shutdown():
             # Calculate command
-            # Do other stuff
+            ang_speed = 0.8
 
             inc_x = self.goal.x - self.pose.x
             inc_y = self.goal.y - self.pose.y
@@ -122,19 +122,19 @@ class ProSolver:
                 if (self.pose.theta < angle_to_goal):
                     if (self.pose.theta < -0.2 and angle_to_goal > 0):
                         if (abs(self.pose.theta > (pi/2)) and abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = 0.6125
+                            speed.angular.z = ang_speed
                         else:
-                            speed.angular.z = -0.6125
+                            speed.angular.z = -ang_speed
                     else:
-                        speed.angular.z = 0.6125
+                        speed.angular.z = ang_speed
                 elif (self.pose.theta > angle_to_goal):
                     if (angle_to_goal < -0.2 and self.pose.theta > 0):
                         if (abs(self.pose.theta > (pi/2)) or abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = 0.6125
+                            speed.angular.z = ang_speed
                         else:
-                            speed.angular.z = -0.6125
+                            speed.angular.z = -ang_speed
                     else:
-                        speed.angular.z = -0.6125
+                        speed.angular.z = -ang_speed
             else:
                 speed.linear.x = 0.08
                 speed.angular.z = 0.0
@@ -147,7 +147,7 @@ class ProSolver:
 if __name__ == '__main__':
     try:
         controller = ProSolver()
-        time.sleep(10);
+        time.sleep(5);
         controller.run()
 
     except rospy.ROSInterruptException:
