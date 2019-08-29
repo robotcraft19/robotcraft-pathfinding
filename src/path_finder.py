@@ -33,8 +33,17 @@ class Node:
         wall_penalty = 0
         for dir in Node.directions:
             try:
-                if Node.matrix[self.row + dir[0]][self.column + dir[1]] == 1:
-                    wall_penalty += 5.0
+                nb =  Node.matrix[self.row + dir[0]][self.column + dir[1]]
+                if nb == 1:
+                    wall_penalty += 10.0
+                for dir_dir in Node.directions:
+                    try:
+                        nb_nb =  Node.matrix[self.row + dir[0] + dir_dir[0]][self.column + dir[1] + dir_dir[1]]
+                        if nb_nb == 1:
+                            wall_penalty += 5.0
+                    except:
+                        # out of bounds
+                        pass
             except:
                 # out of bounds
                 pass
