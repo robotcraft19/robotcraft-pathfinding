@@ -5,7 +5,10 @@
     <include file="$(find robotcraft_maze)/launch/robot_bringup.launch"/>
 
     <!-- Run lidar node -->
-    <include file="$(find ydlidar)/launch/lidar.launch"/>
+    <include file="$(find robotcraft_maze)/launch/lidar.launch"/>
+
+    <!-- Run gmapping -->
+    <include file=$"(find robotcraft_maze)/launch/gmapping.launch"/>
 
     <!-- Run maze_basic node -->
     <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic" output="screen"/>
