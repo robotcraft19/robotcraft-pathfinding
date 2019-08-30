@@ -21,7 +21,7 @@
 #include "std_srvs/Empty.h"
 #include <ctime>
 
-#define TARGET_DISTANCE 0.15
+#define TARGET_DISTANCE 0.20
 
 class BasicSolver {
 
@@ -62,7 +62,7 @@ private:
 
     // Helper variables
     bool robot_lost;
-    int lost_counter;
+    int lost_counter = 0;
     bool robot_stop;
     float robot_x, robot_y;
 
@@ -78,17 +78,13 @@ private:
 
           if (right)
           {
-            if (front_distance < (TARGET_DISTANCE*1.70))
-            {
-              msg.angular.z = 1.25; // maximum angular speed
-              msg.linear.x = 0.08;
               if (front_distance < TARGET_DISTANCE)
               {
-                  // Prevent robot from crashing
-                  msg.angular.z = 1.25; // maximum angular speed
-                  msg.linear.x = -0.04;
+                // Prevent robot from crashing
+                msg.angular.z = 1.25; // maximum angular speed
+                msg.linear.x = 0.02;
               }
-            }
+
               else if (robot_lost == true)
               {
                   // Robot is lost, go straight to find wall
@@ -105,16 +101,11 @@ private:
 
           else if (left)
           {
-              if (front_distance < (TARGET_DISTANCE*1.70))
+              if (front_distance < TARGET_DISTANCE)
               {
-                msg.angular.z = -1.25; // maximum angular speed
-                msg.linear.x = 0.08;
-                if (front_distance < TARGET_DISTANCE)
-                {
-                    // Prevent robot from crashing
-                    msg.angular.z = -1.25; // maximum angular speed
-                    msg.linear.x = -0.04;
-                }
+                  // Prevent robot from crashing
+                  msg.angular.z = -1.25; // maximum angular speed
+                  msg.linear.x = 0.02;
               }
 
               else if (robot_lost == true)
@@ -175,12 +166,12 @@ private:
         // Restrict gain to prevent overshooting on sharp corners
         if(left)
             gain = -gain;
-            if(gain > 0.5)
-                gain = 0.5;
+            if(gain > 0.4)
+                gain = 0.4;
 
 
 	    if(right)
-            if(gain < -0.5) gain = -0.5;
+            if(gain < -0.4) gain = -0.4;
 
 
 	    return gain;
@@ -197,15 +188,16 @@ private:
                 ++lost_counter;
 
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
-                if (lost_counter >= 300) {
+                if (lost_counter >= 200) {
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
-            else if(front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE)
+            else if((front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE) && (right_distance > 0.07) && (front_distance > 0.07))
             {
                 robot_lost = false;
                 lost_counter = 0;
+                ROS_WARN("RIGHT WALL FOUND; front: %f, right: %f", front_distance, right_distance);
             }
         }
         else if (left)
@@ -217,16 +209,16 @@ private:
                 ++lost_counter;
 
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
-                if (lost_counter >= 300) {
+                if (lost_counter >= 200) {
                     robot_lost = true;
                     ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
-            else if(front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE)
+            else if((front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE) && (left_distance > 0.07) && (front_distance > 0.07))
             {
                 robot_lost = false;
                 lost_counter = 0;
-                // ROS_WARN("WALL FOUND");
+                ROS_WARN("LEFT WALL FOUND; front: %f, left: %f", front_distance, left_distance);
             }
         }
 	}
@@ -279,6 +271,7 @@ public:
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
+        n.getParam("robot_lost", this->robot_lost);
 
         int rnd = rand() % 100;
 
@@ -300,6 +293,7 @@ public:
 
         ROS_INFO("Right = %d\n", right);
         ROS_INFO("Left = %d\n", left);
+        ROS_INFO("Robot is LOST = %d\n", robot_lost);
 
         // Setup publishers
     	  this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
@@ -312,9 +306,6 @@ public:
 
         // Setup services
         this->basic_serv = n.advertiseService("stop_save", &BasicSolver::basicServiceCallback, this);
-
-        // Set robot to lost initially
-        this->robot_lost = true;
 
     }
 
