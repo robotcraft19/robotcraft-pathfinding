@@ -111,30 +111,31 @@ class ProSolver:
             inc_y = self.goal.y - self.pose.y
 
             angle_to_goal = atan2(inc_y, inc_x)
+            real_angle = self.pose.theta
 
-            if (inc_x**2 + inc_y**2)**0.5 < 0.05:
+            # Normalize angle_diff
+            if angle_to_goal < 0:
+                angle_to_goal += 2*pi
+                real_angle += 2*pi
+
+            if real_angle < 0:
+                real_angle += 2*pi
+                angle_to_goal += 2*pi
+
+
+            angle_diff = angle_to_goal - real_angle
+
+            if (inc_x**2 + inc_y**2)**0.5 < 0.03:
                 speed.linear.x = 0.0
                 speed.angular.z = 0.0
                 self.next_pose()
 
-            elif abs(angle_to_goal - self.pose.theta) > 0.2: # increase tolerance?
+            elif abs(angle_diff) > 0.2: # increase tolerance?
                 speed.linear.x = 0.0
-                if (self.pose.theta < angle_to_goal):
-                    if (self.pose.theta < -0.2 and angle_to_goal > 0):
-                        if (abs(self.pose.theta > (pi/2)) and abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = ang_speed
-                        else:
-                            speed.angular.z = -ang_speed
-                    else:
-                        speed.angular.z = ang_speed
-                elif (self.pose.theta > angle_to_goal):
-                    if (angle_to_goal < -0.2 and self.pose.theta > 0):
-                        if (abs(self.pose.theta > (pi/2)) or abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = ang_speed
-                        else:
-                            speed.angular.z = -ang_speed
-                    else:
-                        speed.angular.z = -ang_speed
+                if angle_diff < 0:
+                    speed.angular.z = -ang_speed
+                else:
+                    speed.angular.z = +ang_speed
             else:
                 speed.linear.x = 0.08
                 speed.angular.z = 0.0
