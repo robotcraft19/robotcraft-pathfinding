@@ -21,7 +21,7 @@
 #include "std_srvs/Empty.h"
 #include <ctime>
 
-#define TARGET_DISTANCE 0.20
+#define TARGET_DISTANCE 0.17
 
 class BasicSolver {
 
@@ -82,7 +82,7 @@ private:
               {
                 // Prevent robot from crashing
                 msg.angular.z = 1.25; // maximum angular speed
-                msg.linear.x = 0.02;
+                msg.linear.x = -0.04;
               }
 
               else if (robot_lost == true)
@@ -105,7 +105,7 @@ private:
               {
                   // Prevent robot from crashing
                   msg.angular.z = -1.25; // maximum angular speed
-                  msg.linear.x = 0.02;
+                  msg.linear.x = -0.04;
               }
 
               else if (robot_lost == true)
@@ -190,7 +190,7 @@ private:
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
                 if (lost_counter >= 200) {
                     robot_lost = true;
-                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
+                    // ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
             else if((front_distance < TARGET_DISTANCE || right_distance < TARGET_DISTANCE) && (right_distance > 0.07) && (front_distance > 0.07))
@@ -210,7 +210,7 @@ private:
                 // π / 0.4 ≈ 8.0, after 80 loops robot has made at least half a rotation
                 if (lost_counter >= 200) {
                     robot_lost = true;
-                    ROS_WARN("ROBOT LOST! SEARCHING WALL...");
+                    // ROS_WARN("ROBOT LOST! SEARCHING WALL...");
                 }
             }
             else if((front_distance < TARGET_DISTANCE || left_distance < TARGET_DISTANCE) && (left_distance > 0.07) && (front_distance > 0.07))
