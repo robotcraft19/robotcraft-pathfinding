@@ -105,7 +105,7 @@ class ProSolver:
 
         while not rospy.is_shutdown():
             # Calculate command
-            ang_speed = 0.8
+            ang_speed = 0.4
 
             inc_x = self.goal.x - self.pose.x
             inc_y = self.goal.y - self.pose.y
