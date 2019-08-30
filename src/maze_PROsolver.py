@@ -125,7 +125,7 @@ class ProSolver:
 
             angle_diff = angle_to_goal - real_angle
 
-            if (inc_x**2 + inc_y**2)**0.5 < 0.03:
+            if (inc_x**2 + inc_y**2)**0.5 < 0.05:
                 speed.linear.x = 0.0
                 speed.angular.z = 0.0
                 self.next_pose()
