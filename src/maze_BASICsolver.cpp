@@ -197,7 +197,6 @@ private:
             {
                 robot_lost = false;
                 lost_counter = 0;
-                ROS_WARN("RIGHT WALL FOUND; front: %f, right: %f", front_distance, right_distance);
             }
         }
         else if (left)
@@ -218,7 +217,6 @@ private:
             {
                 robot_lost = false;
                 lost_counter = 0;
-                ROS_WARN("LEFT WALL FOUND; front: %f, left: %f", front_distance, left_distance);
             }
         }
 	}
