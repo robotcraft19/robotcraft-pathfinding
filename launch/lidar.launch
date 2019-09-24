@@ -1,0 +1,23 @@
+<launch>
+    <!-- Run LIDAR node-->
+    <node name="ydlidar_node"  pkg="ydlidar"  type="ydlidar_node" output="screen" respawn="false" >
+        <param name="port"         type="string" value="/dev/ydlidar"/>
+        <param name="baudrate"     type="int"    value="76800"/>
+        <param name="frame_id"     type="string" value="base_scan"/>
+        <param name="low_exposure"  type="bool"   value="false"/>
+        <param name="resolution_fixed"    type="bool"   value="true"/>
+        <param name="auto_reconnect"    type="bool"   value="true"/>
+        <param name="reversion"    type="bool"   value="false"/>
+        <param name="angle_min"    type="double" value="-180" />
+        <param name="angle_max"    type="double" value="180" />
+        <param name="range_min"    type="double" value="0.1" />
+        <param name="range_max"    type="double" value="10.0" />
+        <param name="ignore_array" type="string" value="" />
+        <param name="samp_rate"    type="int"    value="9"/>
+        <param name="frequency"    type="double" value="7"/>
+    </node>
+
+    <!-- Create static transform publisher to link robot base and LIDAR -->
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser4"
+      args="0.0 0.0 0.2 0.0 0.0 0.0 /base_link /base_scan 100" />
+</launch>
