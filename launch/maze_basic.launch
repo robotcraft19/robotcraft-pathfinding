@@ -21,8 +21,15 @@
     </node>
 =======
     <!-- Run lidar node -->
+<<<<<<< HEAD
     <include file="$(find ydlidar)/launch/lidar.launch"/>
 >>>>>>> 170aadb62239ed30232fa3c7ba30f502b1e98f56
+=======
+    <include file="$(find robotcraft_maze)/launch/lidar.launch"/>
+
+    <!-- Run gmapping -->
+    <include file="$(find robotcraft_maze)/launch/gmapping.launch"/>
+>>>>>>> dc10274c0a45e38a135b1786744fb99d1a7fea25
 
     <!-- Run maze_basic node -->
     <node pkg="robotcraft_maze" type="maze_basic" name="maze_basic" output="screen"/>
@@ -34,7 +41,11 @@
   <node pkg="robotcraft_maze" type="map_saver" name="map_saver_controller_node" output="screen"/>
 =======
     <param name="right" type="bool" value="false" />
+<<<<<<< HEAD
 >>>>>>> 170aadb62239ed30232fa3c7ba30f502b1e98f56
+=======
+    <param name="robot_lost" type="bool" value="false" />
+>>>>>>> dc10274c0a45e38a135b1786744fb99d1a7fea25
 
     <!-- Run map saver node, periodically saves map and robot position backups -->
     <node pkg="robotcraft_maze" type="map_saver" name="map_saver_controller_node" output="screen"/>
