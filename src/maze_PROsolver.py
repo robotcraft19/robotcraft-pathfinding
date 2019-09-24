@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+import time
 from map_loader import MapLoader
 from path_finder import PathFinder
 from nav_msgs.msg import Odometry
@@ -7,6 +8,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
 from math import atan2, pi
+import itertools
 
 class Pose:
     def __init__(self, x, y, theta):
@@ -15,16 +17,38 @@ class Pose:
         self.theta = theta
 
 class Cell:
-    resolution = 0.2
+    resolution = None
+    start = None
+
     def __init__(self, row, column):
         self.row = row
         self.column = column
+        self.rel_row = self.row - Cell.start.row
+        self.rel_column = self.column - Cell.start.column
 
     def pose(self):
-        # TODO: Pose is in center of cel, except for start node
-        return Pose(self.column * Cell.resolution + Cell.resolution/2, -self.row * Cell.resolution + Cell.resolution/2, 0)
+        # Check if cell has any walls as neighbours
+        neighbors_matrix = ProSolver.matrix[self.row-1:self.row+2, self.column-1:self.column+2]
+        diff_x = 0
+        diff_y = 0
+
+        if 1 in neighbors_matrix: # check if any walls at all
+            if 1 in neighbors_matrix[0, :]:
+                diff_y -= Cell.resolution/2 # move downwards if any wall in top row
+            if 1 in neighbors_matrix[2, :]:
+                diff_y += Cell.resolution/2 # move upwards if any wall in bottom row
+            if 1 in neighbors_matrix[:, 0]:
+                diff_x += Cell.resolution/2 # move to the right if any wall in left column
+            if 1 in neighbors_matrix[:, 2]:
+                diff_x -= Cell.resolution/2 # move to the left if any wall in right column
+            rospy.logwarn("Path passing close to wall, using diff matrix: [%s, %s]", diff_x, diff_y)
+
+        # Set default Pose to center of cell instead of top-left corner and add calculated diffs
+        return Pose((self.rel_column * Cell.resolution) + Cell.resolution/2 + diff_x, \
+                (-self.rel_row * Cell.resolution) - Cell.resolution/2+diff_y, 0)
 
 class ProSolver:
+    matrix = None
     def __init__(self):
         rospy.init_node('maze_pro_solver', anonymous=True)
 
@@ -41,12 +65,14 @@ class ProSolver:
         # Load maze matrix
         self.map_loader = MapLoader(start, target) # do not crop if target outside of maze
         self.map_matrix = self.map_loader.loadMap()
+        ProSolver.matrix = self.map_matrix
         Cell.resolution = self.map_loader.occupancy_grid.info.resolution
 
         # Calculate path
         self.path_finder = PathFinder(self.map_matrix)
         raw_path = self.path_finder.calculate_path()
-        self.path = [Cell(r-self.path_finder.start.row, c- self.path_finder.start.column) for r,c in raw_path] # move rows to correct starting position
+        Cell.start = self.path_finder.start
+        self.path = [Cell(r, c) for r,c in raw_path]
         self.goal = self.path[0].pose()
         self.path_index = 0
         self.pose = Pose(0, 0, 0)
@@ -55,7 +81,12 @@ class ProSolver:
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 10)
 
         # Setup subscribers
+<<<<<<< HEAD
         #odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
+=======
+        #odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
+        odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
+>>>>>>> dc10274c0a45e38a135b1786744fb99d1a7fea25
 
     def odom_callback(self, msg):
         self.pose.x = msg.pose.pose.position.x
@@ -68,6 +99,7 @@ class ProSolver:
         try:
             self.path_index += 1
             self.goal = self.path[self.path_index].pose()
+            rospy.loginfo("Moving to next pose: [%s, %s]", self.goal.x, self.goal.y)
         except IndexError:
             rospy.logwarn("REACHED END OF PATH!")
 
@@ -77,36 +109,37 @@ class ProSolver:
 
         while not rospy.is_shutdown():
             # Calculate command
-            # Do other stuff
+            ang_speed = 0.4
 
             inc_x = self.goal.x - self.pose.x
             inc_y = self.goal.y - self.pose.y
 
             angle_to_goal = atan2(inc_y, inc_x)
+            real_angle = self.pose.theta
+
+            # Normalize angle_diff
+            if angle_to_goal < 0:
+                angle_to_goal += 2*pi
+                real_angle += 2*pi
+
+            if real_angle < 0:
+                real_angle += 2*pi
+                angle_to_goal += 2*pi
+
+
+            angle_diff = angle_to_goal - real_angle
 
             if (inc_x**2 + inc_y**2)**0.5 < 0.05:
                 speed.linear.x = 0.0
                 speed.angular.z = 0.0
                 self.next_pose()
 
-            elif abs(angle_to_goal - self.pose.theta) > 0.1: # increase tolerance?
+            elif abs(angle_diff) > 0.2: # increase tolerance?
                 speed.linear.x = 0.0
-                if (self.pose.theta < angle_to_goal):
-                    if (self.pose.theta < -0.2 and angle_to_goal > 0):
-                        if (abs(self.pose.theta > (pi/2)) and abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = 0.3
-                        else:
-                            speed.angular.z = -0.3
-                    else:
-                        speed.angular.z = 0.3
-                elif (self.pose.theta > angle_to_goal):
-                    if (angle_to_goal < -0.2 and self.pose.theta > 0):
-                        if (abs(self.pose.theta > (pi/2)) or abs(angle_to_goal > (pi/2))):
-                            speed.angular.z = 0.3
-                        else:
-                            speed.angular.z = -0.3
-                    else:
-                        speed.angular.z = -0.3
+                if angle_diff < 0:
+                    speed.angular.z = -ang_speed
+                else:
+                    speed.angular.z = +ang_speed
             else:
                 speed.linear.x = 0.08
                 speed.angular.z = 0.0
@@ -119,6 +152,7 @@ class ProSolver:
 if __name__ == '__main__':
     try:
         controller = ProSolver()
+        time.sleep(5);
         controller.run()
 
     except rospy.ROSInterruptException:
