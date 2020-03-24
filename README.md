@@ -1,4 +1,4 @@
-# robotcraft_maze
+# amazebot-pathfinding
 
 This repository is a ROS package that can be used to solve the basic and pro maze which are part of the competition in the RobotCraft 2019 summer programme.
 

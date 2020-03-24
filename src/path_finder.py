@@ -153,7 +153,7 @@ class PathFinder:
         # Writes map to file and optionally prints it
         map = self.matrix.copy()
         with open(os.path.join(os.path.expanduser('~'),
-            'catkin_ws/src/robotcraft_maze/scans/path_route.txt'), 'w') as f:
+            'catkin_ws/src/amazebot-pathfinding/scans/path_route.txt'), 'w') as f:
             for point in path:
                 map[point[0], point[1]] = 7
             for row in map:

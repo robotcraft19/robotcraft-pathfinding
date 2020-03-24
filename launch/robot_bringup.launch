@@ -6,5 +6,5 @@
 		</node>
 
 		<!-- Run robot_driver node to handle communication between Arduino and ROS topics -->
-		<node pkg = "robotcraft_maze" name = "robot_driver" type = "robot_driver" output = "screen"/>
+		<node pkg = "amazebot-pathfinding" name = "robot_driver" type = "robot_driver" output = "screen"/>
 </launch>
