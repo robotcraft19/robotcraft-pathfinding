@@ -81,12 +81,8 @@ class ProSolver:
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 10)
 
         # Setup subscribers
-<<<<<<< HEAD
-        #odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
-=======
         #odom_sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
         odom_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.odom_callback)
->>>>>>> dc10274c0a45e38a135b1786744fb99d1a7fea25
 
     def odom_callback(self, msg):
         self.pose.x = msg.pose.pose.position.x

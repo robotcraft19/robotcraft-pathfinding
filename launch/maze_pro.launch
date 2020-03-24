@@ -15,21 +15,12 @@
 
   <!-- Run maze_pro node -->
   <node pkg="robotcraft_maze" type="maze_PROsolver.py" name="maze_pro" output="screen">
-<<<<<<< HEAD
-      <rosparam param="position">
-          startX: 0.00
-          startY: -0.40
-          targetX: 1.20
-          targetY: -5.20
-      </rosparam>
-=======
       <!--<rosparam param="position">
           startX: 0.00
           startY: -0.30
           targetX: 4.15
           targetY: -0.30
       </rosparam> -->
->>>>>>> 170aadb62239ed30232fa3c7ba30f502b1e98f56
   </node>
 
 </launch>

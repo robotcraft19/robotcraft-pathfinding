@@ -37,7 +37,7 @@ class MapLoader:
     def loadMap(self):
 
         # Load image (alternatively use occupancy_grid data and reshape)
-        scans_dir = os.path.join(os.path.expanduser("~"),"catkin_ws/src/robotcraft_maze/scans/")
+        scans_dir = os.path.join(os.path.expanduser("~"),"catkin_ws/src/amazebot-pathfinding/scans/")
         self.orig_img = cv2.imread(os.path.join(scans_dir, "map.pgm"), cv2.IMREAD_GRAYSCALE)
 
         if self.crop_image == True:
@@ -60,7 +60,7 @@ class MapLoader:
         img = self.place_robot(img)
         img = self.place_target(img)
         np.savetxt(os.path.join(os.path.expanduser("~"),
-            'catkin_ws/src/robotcraft_maze/scans/map_matrix.txt'), img, delimiter='', fmt='%d')
+            'catkin_ws/src/amazebot-pathfinding/scans/map_matrix.txt'), img, delimiter='', fmt='%d')
         rospy.loginfo('Saved map matrix to text file...')
 
         return img
@@ -68,6 +68,7 @@ class MapLoader:
     def place_robot(self, img):
         origin_x = self.occupancy_grid.info.origin.position.x
         origin_y = self.occupancy_grid.info.origin.position.y
+        resolution = self.occupancy_grid.info.resolution
         height = self.occupancy_grid.info.height
         width = self.occupancy_grid.info.width
 
@@ -100,7 +101,7 @@ class MapLoader:
             y_pos = 0
 
             with open(os.path.join(os.path.expanduser("~"),
-                'catkin_ws/src/robotcraft_maze/scans/robot_position.txt'), 'r') as f:
+                'catkin_ws/src/amazebot-pathfinding/scans/robot_position.txt'), 'r') as f:
                 x_pos = float(f.readline())
                 y_pos = float(f.readline())
 

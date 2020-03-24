@@ -70,67 +70,8 @@ private:
 
     geometry_msgs::Twist calculateCommand(){
     	// Create message
-        auto msg = geometry_msgs::Twist();
-        if(!this->robot_stop) {
-            // Check if robot is lost (after 75 loops without sensing any wall)
-            calculateRobotLost();
+    	auto msg = geometry_msgs::Twist();
 
-<<<<<<< HEAD
-            if (right)
-            {
-                if (front_distance < (TARGET_DISTANCE*1.70))
-                {
-                msg.angular.z = 1..25; // maximum angular speed
-                msg.linear.x = 0.08;
-                if (front_distance < TARGET_DISTANCE)
-                {
-                    // Prevent robot from crashing
-                    msg.angular.z = 1.25; // maximum angular speed
-                    msg.linear.x = -0.04;
-                }
-                }
-                else if (robot_lost == true)
-                {
-                    // Robot is lost, go straight to find wall
-                    msg.linear.x = 0.08;
-                }
-                else
-                {
-                    // Robot keeps using normal PID controller
-                    float gain = calculateGain(right_distance);
-                    msg.linear.x = 0.08;
-                    msg.angular.z = gain;
-                }
-            }
-
-            else if (left)
-            {
-                if (front_distance < (TARGET_DISTANCE*1.70))
-                {
-                    msg.angular.z = -1.25; // maximum angular speed
-                    msg.linear.x = 0.08;
-                    if (front_distance < TARGET_DISTANCE)
-                    {
-                        // Prevent robot from crashing
-                        msg.angular.z = -1.25; // maximum angular speed
-                        msg.linear.x = -0.04;
-                    }
-                }
-
-                else if (robot_lost == true)
-                {
-                    // Robot is lost, go straight to find wall
-                    msg.linear.x = 0.08;
-                }
-                else
-                {
-                    // Robot keeps using normal PID controller
-                    float gain = calculateGain(left_distance);
-                    msg.linear.x = 0.08;
-                    msg.angular.z = gain;
-                }
-            }
-=======
       if(!this->robot_stop) {
         // Check if robot is lost (after 75 loops without sensing any wall)
         calculateRobotLost();
@@ -180,7 +121,6 @@ private:
                   msg.angular.z = gain;
               }
           }
->>>>>>> dc10274c0a45e38a135b1786744fb99d1a7fea25
       }
 
       else {
@@ -229,6 +169,7 @@ private:
             if(gain > 0.4)
                 gain = 0.4;
 
+
 	    if(right)
             if(gain < -0.4) gain = -0.4;
 
@@ -260,7 +201,7 @@ private:
         }
         else if (left)
         {
-            // Calculations needed to check if robot is lost
+            // Calculations needed to100 check if robot is lost
             if (front_distance > TARGET_DISTANCE && right_distance > TARGET_DISTANCE
                 && left_distance > TARGET_DISTANCE)
             {
@@ -284,7 +225,6 @@ private:
            std_srvs::Empty::Response &res)
   {
     ROS_INFO("Request to stop robot and save map and position received...");
-
     this->robot_stop = true;
     saveMap();
     saveRobotPose();
@@ -296,7 +236,7 @@ private:
     *  occupancy grid from /map topic as image */
 
     // Save as map.pgm
-    system("cd ~/catkin_ws/src/robotcraft_maze/scans && rosrun map_server map_saver -f map");
+    system("cd ~/catkin_ws/src/amazebot-pathfinding/scans && rosrun map_server map_saver -f map");
   }
 
   void saveRobotPose() {
@@ -304,7 +244,7 @@ private:
     *  for target position calculation */
     const char* homeDir = getenv("HOME");
     std::string file(homeDir);
-    file.append("/catkin_ws/src/robotcraft_maze/scans/robot_position.txt");
+    file.append("/catkin_ws/src/amazebot-pathfinding/scans/robot_position.txt");
 
     std::ofstream position_file;
     position_file.open (file);
@@ -325,7 +265,7 @@ public:
     BasicSolver(){
         // Initialize ROS
         this->n = ros::NodeHandle();
-	    srand(time(NULL));
+	      srand(time(NULL));
 
         n.getParam("left", this->left);
         n.getParam("right", this->right);
@@ -357,16 +297,9 @@ public:
     	  this->cmd_vel_pub = this->n.advertise<geometry_msgs::Twist>("cmd_vel", 5);
 
         // Setup subscribers
-<<<<<<< HEAD
-        this->front_ir_sub = this->n.subscribe("ir_front_sensor", 10, &BasicSolver::frontIRCallback, this);
-        this->left_ir_sub = this->n.subscribe("ir_left_sensor", 10, &BasicSolver::leftIRCallback, this);
-        this->right_ir_sub = this->n.subscribe("ir_right_sensor", 10, &BasicSolver::rightIRCallback, this);
-
-=======
         this->front_ir_sub = this->n.subscribe("ir_front_sensor", 5, &BasicSolver::frontIRCallback, this);
         this->left_ir_sub = this->n.subscribe("ir_left_sensor", 5, &BasicSolver::leftIRCallback, this);
         this->right_ir_sub = this->n.subscribe("ir_right_sensor", 5, &BasicSolver::rightIRCallback, this);
->>>>>>> dc10274c0a45e38a135b1786744fb99d1a7fea25
         this->odom_sub = this->n.subscribe("odom", 5, &BasicSolver::odomCallback, this);
 
         // Setup services
