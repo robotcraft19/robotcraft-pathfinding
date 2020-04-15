@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package>
-  <name>amazebot-pathfinding</name>
+  <name>robotcraft-pathfinding</name>
   <version>0.3.0</version>
   <description>The Amazebot Pathfinding package</description>
   <maintainer email="noemail@noemail.noemail">Nicolas Filliol</maintainer>
   <maintainer email="erwin.lejeune15@gmail.com">Erwin Lejeune</maintainer>
   <license>MIT</license>
-  <url type="website">https://github.com/robotcraft19/amazebot-pathfinding</url>
+  <url type="website">https://github.com/robotcraft19/robotcraft-pathfinding</url>
 
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->

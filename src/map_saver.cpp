@@ -31,7 +31,7 @@ private:
 		*  occupancy grid from /map topic as image */
 
 		// Save as map_backup.pgm
-		system("cd ~/catkin_ws/src/amazebot-pathfinding/scans && rosrun map_server map_saver -f map_backup");
+		system("cd ~/catkin_ws/src/robotcraft-pathfinding/scans && rosrun map_server map_saver -f map_backup");
 	}
 
 	void saveRobotPose() {
@@ -39,7 +39,7 @@ private:
 		*  for target position calculation */
 		const char* homeDir = getenv("HOME");
 		std::string file(homeDir);
-		file.append("/catkin_ws/src/amazebot-pathfinding/scans/rob_pos_backup.txt");
+		file.append("/catkin_ws/src/robotcraft-pathfinding/scans/rob_pos_backup.txt");
 
 		std::ofstream position_file;
 		position_file.open (file);
@@ -79,7 +79,7 @@ public:
 						saveRobotPose();
 						ROS_WARN_STREAM("Saving image of map as map_backup.pgm"
 						<< " and saving robot's pose as rob_pos_backup.txt"
-					 	<< " in ~/catkin_ws/src/amazebot-pathfinding/scans");
+					 	<< " in ~/catkin_ws/src/robotcraft-pathfinding/scans");
 	        	}
 
 						// Receive messages

@@ -7,9 +7,9 @@
 
 <br />
 <p align="center">
-  <a href="https://github.com/robotcraft19/amazebot-pathfinding>
+  <a href="https://github.com/robotcraft19/robotcraft-pathfinding>
     <img src="res/images/logo_amazebot.png" alt="Logo" width="100" height="100">
-    <img src="https://raw.githubusercontent.com/robotcraft19/amazebot-pathfinding-stage/master/res/images/logo_amazebot.png">
+    <img src="https://raw.githubusercontent.com/robotcraft19/robotcraft-pathfinding-stage/master/res/images/logo_amazebot.png">
   </a>
 
   <h3 align="center">Amazebot Real World Pathfinding Package</h3>
@@ -17,14 +17,14 @@
   <p align="center">
     Pathfinding package. Use A* to find optimal path in a mapped environment.
     <br />
-    <a href="https://github.com/robotcraft19/amazebot-pathfinding"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/robotcraft19/robotcraft-pathfinding"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/robotcraft19/amazebot-pathfinding">View Demo</a>
+    <a href="https://github.com/robotcraft19/robotcraft-pathfinding">View Demo</a>
     ·
-    <a href="https://github.com/robotcraft19/amazebot-pathfinding/issues">Report Bug</a>
+    <a href="https://github.com/robotcraft19/robotcraft-pathfinding/issues">Report Bug</a>
     ·
-    <a href="https://github.com/robotcraft19/amazebot-pathfinding/issues">Request Feature</a>
+    <a href="https://github.com/robotcraft19/robotcraft-pathfinding/issues">Request Feature</a>
   </p>
 </p>
 
@@ -44,7 +44,7 @@
 ## About the Project
 
 <p align="center">
-  <a href="https://github.com/robotcraft19/amazebot-pathfinding>
+  <a href="https://github.com/robotcraft19/robotcraft-pathfinding>
     <img src="res/images/..." alt="About" width="300" height="160">
   </a>
 </p>
@@ -59,7 +59,7 @@ Now that you have ROS, to setup the project on your local machine:
 
 1. Click on `Fork`.
 2. Go to your fork and `clone` the project to your local machine, in the "catkin_ws" folder.
-3. `git clone https://github.com/robotcraft19/amazebot-pathfinding.git`
+3. `git clone https://github.com/robotcraft19/robotcraft-pathfinding.git`
 4. Make sure you have rosdep install : `sudo apt-get install python-rosdep && sudo rosdep init`
 5. `cd ~/catkin_ws`
 6. `rosdep install --from-paths src --ignore-src -r -y`
@@ -73,7 +73,7 @@ Running the nodes is quite easy as launch files were made.
 
 ### First Step :
 
-- Reactive Driving and Mapping : `roslaunch amazebot-pathfinding maze_basic.launch`
+- Reactive Driving and Mapping : `roslaunch robotcraft-pathfinding maze_basic.launch`
 
 A node then stores the mapped environment in the scans folder. The initial position used by the pathfinder is the initial position of the robot. The final position is the last known position. It is saved when exiting the task and repetitively throughout the process.
 
@@ -81,11 +81,11 @@ A node then stores the mapped environment in the scans folder. The initial posit
 
 Another node loads the mapped environment stored previously at the begining of the astar pathfinding launch file.
 
-- A* Pathfinder : `roslaunch amazebot-pathfinding maze_pro.launch`
+- A* Pathfinder : `roslaunch robotcraft-pathfinding maze_pro.launch`
 
 ## Roadmap
 
-See the [open issues](https://github.com/robotcraft19/amazebot-pathfinding/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/robotcraft19/robotcraft-pathfinding/issues) for a list of proposed features (and known issues).
 
 ## Contribute
 
@@ -93,7 +93,7 @@ Contributions are what make the open source community such an amazing place to l
 
 ### Contribute on proposed features
 
-1. Choose any open issue from [here](https://github.com/robotcraft19/amazebot-pathfinding/issues). 
+1. Choose any open issue from [here](https://github.com/robotcraft19/robotcraft-pathfinding/issues). 
 2. Comment on the issue: `Can I work on this?` and get assigned.
 3. Make changes to your fork and send a PR.
 
@@ -135,15 +135,15 @@ Everyone part of the original team or that assisted throughout the development.
 - [Nicolas Filliol (Project Lead)](https://github.com/nicofilliol)
 - [Erwin Lejeune](https://github.com/Guilyx)
 
-[contributors-shield]: https://img.shields.io/github/contributors/robotcraft19/amazebot-pathfinding.svg?style=flat-square
-[contributors-url]: https://github.com/robotcraft19/amazebot-pathfinding/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/robotcraft19/amazebot-pathfinding.svg?style=flat-square
-[forks-url]: https://github.com/robotcraft19/amazebot-pathfinding/network/members
-[stars-shield]: https://img.shields.io/github/stars/robotcraft19/amazebot-pathfinding.svg?style=flat-square
-[stars-url]: https://github.com/robotcraft19/amazebot-pathfinding/stargazers
-[issues-shield]: https://img.shields.io/github/issues/robotcraft19/amazebot-pathfinding.svg?style=flat-square
-[issues-url]: https://github.com/robotcraft19/amazebot-pathfinding/issues
-[license-shield]: https://img.shields.io/github/license/robotcraft19/amazebot-pathfinding.svg?style=flat-square
-[license-url]: https://github.com/robotcraft19/amazebot-pathfinding/blob/master/LICENSE.md
+[contributors-shield]: https://img.shields.io/github/contributors/robotcraft19/robotcraft-pathfinding.svg?style=flat-square
+[contributors-url]: https://github.com/robotcraft19/robotcraft-pathfinding/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/robotcraft19/robotcraft-pathfinding.svg?style=flat-square
+[forks-url]: https://github.com/robotcraft19/robotcraft-pathfinding/network/members
+[stars-shield]: https://img.shields.io/github/stars/robotcraft19/robotcraft-pathfinding.svg?style=flat-square
+[stars-url]: https://github.com/robotcraft19/robotcraft-pathfinding/stargazers
+[issues-shield]: https://img.shields.io/github/issues/robotcraft19/robotcraft-pathfinding.svg?style=flat-square
+[issues-url]: https://github.com/robotcraft19/robotcraft-pathfinding/issues
+[license-shield]: https://img.shields.io/github/license/robotcraft19/robotcraft-pathfinding.svg?style=flat-square
+[license-url]: https://github.com/robotcraft19/robotcraft-pathfinding/blob/master/LICENSE.md
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/erwinlejeune-lkn
